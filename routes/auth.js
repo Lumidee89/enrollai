@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const authController = require('../controllers/authController'); 
+const authController = require('../controllers/authcontroller'); 
 
 router.post('/register', authController.register);
 router.post('/verify-otp', authController.verifyOtp);
