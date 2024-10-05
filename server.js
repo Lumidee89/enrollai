@@ -13,6 +13,7 @@ app.use(express.json());
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "https://enrollai.netlify.app"
 ];
 
 app.use(
