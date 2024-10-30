@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth");
+const caqhAuthRoutes = require('./routes/caqhauth');
+const applicationRoutes = require('./routes/applicationRoutes.js');
 
 require("dotenv").config();
 
@@ -32,6 +34,8 @@ app.use(
 );
 
 app.use("/api/auth", authRoutes);
+app.use('/api/caqhauth', caqhAuthRoutes);
+app.use('/api/application', applicationRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
