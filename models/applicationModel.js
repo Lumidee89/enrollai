@@ -1,75 +1,190 @@
 const mongoose = require('mongoose');
 
-const applicationSchema = new mongoose.Schema({
-  step: { type: Number, default: 1 },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  applicationType: { type: String, enum: ['Credentialing request', 'Health plan', 'Health insurance', 'Licensing'] },
-
-  personalInfo: {
-    fullName: String,
-    sex: String,
-    dateOfBirth: Date,
-    ssn: String,
-    languageSpoken: String,
-    phoneNumber: String,
-    emailAddress: String,
-    address: String,
-    nationalProviderIdentifier: String,
-    tin: String,
-    medicalCareID: String,
-    deaCertificateNumber: String,
-    education: [{
-      institution: String,
-      degree: String,
-      yearOfGraduation: String
-    }]
-  },
-
-  practiceLocations: {
-    primaryLocation: {
-      name: String,
-      officeAddress: String,
-      contact: String,
-      fax: String,
-      email: String,
-      officeHours: String
+const applicationSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    applicationType: {
+      type: String,
+      required: true,
+      enum: ['credentialing request', 'health plan', 'health insurance', 'licensing', 'credentialing'],
     },
-    additionalLocations: [{
-      name: String,
-      officeAddress: String,
-      contact: String,
-      fax: String,
-      email: String,
-      officeHours: String
-    }],
-    hospitalAffiliations: [{
-      location: String,
-      privileges: String
-    }],
-    licenses: [{
-      licenseType: String,
-      licenseNumber: String,
-      expiryDate: Date
-    }],
-    workHistory: [{
-      position: String,
-      startDate: Date,
-      endDate: Date
-    }],
-    malpracticeInsurance: [{
-      carrier: String,
-      policyNumber: String,
-      coverageLimit: String,
-      effectiveDates: {
-        startDate: Date,
-        endDate: Date
-      }
-    }],
-    liabilityClaimsHistory: [{
-      claim: String,
-      status: String
-    }]
-  }
-}, { timestamps: true });
+    step1: {
+      lastname: { type: String, required: true },
+      firstname: { type: String, required: true },
+      middlename: { type: String, default: '' },
+      othernames: { type: String, default: '' },
+      homeMailingAddress: { type: String, required: true },
+      city: { type: String, required: true },
+      state: { type: String, required: true },
+      zip: { type: String, required: true },
+      homeTelephone: { type: String, required: true },
+      email: { type: String, required: true },
+      homeFax: { type: String },
+      cellPhone: { type: String },
+      dateOfBirth: { type: Date, required: true },
+      birthplace: { type: String },
+      SSN: { type: String },
+      gender: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
+      citizenship: { type: String },
+      specialty: { type: String },
+      race: { type: String },
+      subspecialties: { type: String },
+      practiceName: { type: String },
+      departmentName: { type: String },
+      primaryOffice: {
+        address: { type: String },
+        city: { type: String },
+        state: { type: String },
+        zip: { type: String },
+        telephone: { type: String },
+        fax: { type: String },
+        manager: { type: String },
+        managerTelephone: { type: String },
+        affiliatedWithTaxId: { type: String },
+        federalTaxIdNo: { type: String },
+      },
+      secondaryOffice: {
+        address: { type: String },
+        city: { type: String },
+        state: { type: String },
+        zip: { type: String },
+        manager: { type: String },
+        fax: { type: String },
+        managerTelephone: { type: String },
+        affiliatedWithTaxId: { type: String },
+        federalTaxIdNo: { type: String },
+      },
+      tertiaryOffice: {
+        address: { type: String },
+        city: { type: String },
+        state: { type: String },
+        zip: { type: String },
+        manager: { type: String },
+        fax: { type: String },
+        managerTelephone: { type: String },
+        affiliatedWithTaxId: { type: String },
+        federalTaxIdNo: { type: String },
+      },
+      education: {
+        premedical: {
+          collegeOrUniversityName: { type: String },
+          degreeReceived: { type: String },
+          dateOfGraduation: { type: Date },
+          mailingAddress: { type: String },
+          city: { type: String },
+          state: { type: String },
+          zip: { type: String },
+        },
+        medical: {
+          collegeOrUniversityName: { type: String },
+          degreeReceived: { type: String },
+          dateOfGraduation: { type: Date },
+          mailingAddress: { type: String },
+          city: { type: String },
+          state: { type: String },
+          zip: { type: String },
+        },
+        professional: {
+          collegeOrUniversityName: { type: String },
+          degreeReceived: { type: String },
+          dateOfGraduation: { type: Date },
+          mailingAddress: { type: String },
+          city: { type: String },
+          state: { type: String },
+          zip: { type: String },
+        },
+      },
+      internship: {
+        institution: { type: String },
+        programDirector: { type: String },
+        mailingAddress: { type: String },
+        city: { type: String },
+        state: { type: String },
+        zip: { type: String },
+        type: { type: String },
+        specialty: { type: String },
+        startDate: { type: Date },
+        endDate: { type: Date },
+        physicianName: { type: String },
+      },
+    },
+    step2: {
+      residencies: [
+        {
+          institution: { type: String },
+          programInstitution: { type: String },
+          mailingAddress: { type: String },
+          city: { type: String },
+          state: { type: String },
+          zip: { type: String },
+          typeOfTraining: { type: String },
+          specialty: { type: String },
+          startDate: { type: Date },
+          endDate: { type: Date },
+        },
+      ],
+      medicalLicenses: [
+        {
+          state: { type: String },
+          licenseNumber: { type: String },
+          expiryDate: { type: Date },
+        },
+      ],
+      additionalDetails: {
+        registrationNumber: { type: String },
+        expiryDate: { type: Date },
+        controlledCertificate: { type: String },
+        controlledExpiryDate: { type: Date },
+        ECFMGNumber: { type: String },
+        dateIssued: { type: Date },
+        validThroughDate: { type: Date },
+        UPIN: { type: String },
+        medicareNumber: { type: String },
+      },
+      carriers: {
+        current: {
+          name: { type: String },
+          policyName: { type: String },
+          originalDate: { type: Date },
+          mailingAddress: { type: String },
+          city: { type: String },
+          state: { type: String },
+          zip: { type: String },
+          perClaimAmount: { type: Number },
+          aggregateAmount: { type: Number },
+          expiryDate: { type: Date },
+          surcharge: { type: Number },
+        },
+        previous: [
+          {
+            name: { type: String },
+            policyNumber: { type: String },
+            fromDate: { type: Date },
+            endDate: { type: Date },
+            mailingAddress: { type: String },
+            city: { type: String },
+            state: { type: String },
+            zip: { type: String },
+          },
+        ],
+      },
+      boards: [
+        {
+          name: { type: String },
+          specialty: { type: String },
+          dateCertified: { type: Date },
+          expiryDate: { type: Date },
+          intentForCertification: { type: String },
+        },
+      ],
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'declined'],
+      default: 'pending',
+    },
+  },
+  { timestamps: true }
+);
 
 module.exports = mongoose.model('Application', applicationSchema);

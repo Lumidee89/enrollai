@@ -2,20 +2,23 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema({
-    accountType: { 
-        type: String, 
-        enum: ['provider', 'credentialing organization'], 
-        required: true 
+    accountType: {
+        type: String,
+        enum: ['provider', 'organization', 'credential specialist'],
+        required: true
     },
     fullName: { type: String, required: true },
-    professionalTitle: { type: String }, 
+    professionalTitle: { type: String },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     isVerified: { type: Boolean, default: false },
-    otp: { type: String },  
+    otp: { type: String },
     otpCreatedAt: { type: Date },
-    passwordResetToken: { type: String }, 
+    passwordResetToken: { type: String },
     passwordResetExpires: { type: Date },
+    groups: {
+        type: [String] 
+    }
 });
 
 UserSchema.pre('save', async function (next) {
