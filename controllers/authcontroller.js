@@ -158,3 +158,56 @@ exports.resendOtp = async (req, res) => {
     res.status(500).json({ msg: 'Server error', error: error.message });
   }
 };
+
+exports.getUserDetails = async (req, res) => {
+  try {
+    const users = await User.find({}, 'fullName email');
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  const { fullName, email } = req.body;
+  const userId = req.user.id;
+  try {
+      const user = await User.findById(userId);
+      if (!user) {
+          return res.status(404).json({ msg: 'User not found' });
+      }
+      if (email && email !== user.email) {
+          const existingUser = await User.findOne({ email });
+          if (existingUser) {
+              return res.status(400).json({ msg: 'Email already in use' });
+          }
+      }
+      user.fullName = fullName || user.fullName;
+      user.email = email || user.email;
+      await user.save();
+      res.status(200).json({ msg: 'Profile updated successfully', user: { fullName: user.fullName, email: user.email } });
+  } catch (error) {
+      res.status(500).json({ msg: 'Server error', error: error.message });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const userId = req.user.id;
+  try {
+      const user = await User.findById(userId);
+      if (!user) {
+          return res.status(404).json({ msg: 'User not found' });
+      }
+      const isMatch = await user.comparePassword(oldPassword);
+      if (!isMatch) {
+          return res.status(400).json({ msg: 'Old password is incorrect' });
+      }
+      user.password = newPassword;
+      await user.save();
+      res.status(200).json({ msg: 'Password changed successfully' });
+  } catch (error) {
+      res.status(500).json({ msg: 'Server error', error: error.message });
+  }
+};
