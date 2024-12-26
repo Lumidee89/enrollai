@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const OrganizationSchema = new mongoose.Schema({
+  accountType: {
+    type: String,
+    enum: ['credentialing_organization', 'organization', 'credential specialist'],
+    required: true
+  },
   organizationName: { type: String, required: true },
   administratorFullName: { type: String, required: true },
   workEmail: { type: String, required: true, unique: true },

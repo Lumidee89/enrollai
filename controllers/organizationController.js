@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 
 const registerOrganization = async (req, res) => {
   try {
-    const { organizationName, administratorFullName, workEmail, password } = req.body;
+    const { accountType, organizationName, administratorFullName, workEmail, password } = req.body;
 
     const existingOrganization = await Organization.findOne({ workEmail });
     if (existingOrganization) {
@@ -12,6 +12,7 @@ const registerOrganization = async (req, res) => {
     }
 
     const newOrganization = new Organization({
+      accountType,
       organizationName,
       administratorFullName,
       workEmail,
