@@ -1,25 +1,42 @@
 const Application = require('../models/applicationModel');
 const User = require('../models/User');
+const OrganizationApplication = require('../models/credentialingApplication');
 
 const createApplication = async (req, res) => {
   try {
-    const { applicationType, step1, step2 } = req.body;
+    const { applicationType, step1, step2, step3, organizationApplicationId } = req.body;
     const userId = req.user._id;
+
+    // Validate user existence
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    // Validate organization application existence
+    const organizationApplication = await OrganizationApplication.findById(organizationApplicationId);
+    if (!organizationApplication) {
+      return res.status(404).json({ message: 'Organization application not found' });
+    }
+
+    // Create user's application
     const newApplication = new Application({
       userId,
       applicationType,
       step1,
       step2,
+      step3,
+      organizationApplication: organizationApplicationId,
     });
 
     await newApplication.save();
-    res.status(201).json({ message: 'Application created successfully', application: newApplication });
+
+    res.status(201).json({
+      message: 'Application created successfully',
+      application: newApplication,
+    });
   } catch (error) {
-    console.error(error);
+    console.error('Error creating user application:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
 };
