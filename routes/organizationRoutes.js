@@ -1,14 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const { registerOrganization, loginOrganization } = require('../controllers/organizationController');
+const { registerOrganization, loginOrganization, getOrganizationDetails, updateOrganizationDetails, changeOrganizationPassword } = require('../controllers/organizationController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 const { createApplication, getApplications } = require('../controllers/credentialingApplication');
 const { getAllApplicationsForOrganization, approveApplication, declineApplication } = require('../controllers/credController');
+const { authenticateOrganization } = require('../controllers/organizationController');
 
 router.post('/register', registerOrganization);
 router.post('/login', loginOrganization);
 router.post('/application', protect, authorize('credentialing_organization'), createApplication);
 router.get('/getApplications', protect, getApplications);
+
+router.get('/details', authenticateOrganization, getOrganizationDetails);
+router.put('/update', authenticateOrganization, updateOrganizationDetails);
+router.put('/change-password', authenticateOrganization, changeOrganizationPassword);
 
   router.get('/applications', async (req, res) => {
     const result = await getAllApplicationsForOrganization();
