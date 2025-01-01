@@ -59,9 +59,56 @@ async function getAllApplicationsForOrganization() {
       return { success: false, message: error.message };
     }
   }
+
+  async function getPendingApplicationsForOrganization(organizationId) {
+    try {
+      const pendingApplications = await Application.find({
+        organizationApplication: organizationId,
+        status: 'pending',
+      });
+  
+      if (!pendingApplications || pendingApplications.length === 0) {
+        return { success: false, message: 'No pending applications found.' };
+      }
+  
+      return { success: true, pendingApplications };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  }  
+
+  async function getApprovedApplicationsForOrganization(req, res) {
+    try {
+      const { organizationId } = req.params; 
+      const approvedApplications = await Application.find({
+        organizationApplication: organizationId,
+        status: 'approved', 
+      });
+  
+      if (!approvedApplications || approvedApplications.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'No approved applications found for this organization.',
+        });
+      }
+  
+      res.status(200).json({
+        success: true,
+        applications: approvedApplications,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'An error occurred while fetching approved applications.',
+        error: error.message,
+      });
+    }
+  }  
   
   module.exports = {
     getAllApplicationsForOrganization,
     approveApplication,
     declineApplication,
+    getPendingApplicationsForOrganization,
+    getApprovedApplicationsForOrganization,
   };
