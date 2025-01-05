@@ -4,6 +4,7 @@ const applicationController = require("../controllers/applicationController");
 const { protect, authorize } = require("../middleware/authMiddleware");
 
 router.post("/apply", protect, applicationController.createApplication);
+
 router.get(
   "/:applicationId",
   protect,
@@ -25,6 +26,7 @@ router.get(
   applicationController.getApplicationStatsByUserId
 );
 router.put("/:applicationId", protect, applicationController.updateApplication);
+
 router.delete(
   "/:applicationId",
   protect,

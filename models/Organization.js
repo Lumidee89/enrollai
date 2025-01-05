@@ -1,11 +1,15 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const OrganizationSchema = new mongoose.Schema({
   accountType: {
     type: String,
-    enum: ['credentialing_organization', 'organization', 'credential specialist'],
-    required: true
+    enum: [
+      "credentialing_organization",
+      "organization",
+      "credential specialist",
+    ],
+    required: true,
   },
   organizationName: { type: String, required: true },
   administratorFullName: { type: String, required: true },
@@ -14,8 +18,8 @@ const OrganizationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-OrganizationSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
+OrganizationSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
     return next();
   }
   const salt = await bcrypt.genSalt(10);
@@ -23,4 +27,4 @@ OrganizationSchema.pre('save', async function (next) {
   next();
 });
 
-module.exports = mongoose.model('Organization', OrganizationSchema);
+module.exports = mongoose.model("Organization", OrganizationSchema);

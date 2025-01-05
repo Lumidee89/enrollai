@@ -3,8 +3,6 @@ const User = require("../models/User");
 const OrganizationApplication = require("../models/Organization");
 
 const createApplication = async (req, res) => {
-  // console.log(req.body);
-
   try {
     const {
       applicationType,
@@ -155,10 +153,10 @@ const getApplicationStatsByUserId = async (req, res) => {
 const updateApplication = async (req, res) => {
   try {
     const { applicationId } = req.params;
-    const { step1, step2 } = req.body;
+    const { step1, step2, step3 } = req.body;
     const updatedApplication = await Application.findByIdAndUpdate(
       applicationId,
-      { step1, step2 },
+      { step1, step2, step3 },
       { new: true }
     );
     if (!updatedApplication) {
