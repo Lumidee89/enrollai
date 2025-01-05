@@ -4,42 +4,30 @@ const OrganizationApplication = require("../models/Organization");
 
 const createApplication = async (req, res) => {
   try {
-    const {
-      applicationType,
-      step1,
-      step2,
-      step3,
-      organizationApplicationId,
-      applicationTitle,
-      organizationName,
-    } = req.body;
+    const { applicationType, step1, step2, step3, organizationApplicationId } = req.body;
     const userId = req.user._id;
 
-    // Validate user existence
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    // Validate organization application existence
-    const organizationApplication = await OrganizationApplication.findById(
-      organizationApplicationId
-    ).select("-password");
-
-    console.log(organizationApplication, "organizationApplication");
-
+    const organizationApplication = await OrganizationApplication.findById(organizationApplicationId);
     if (!organizationApplication) {
-      return res
-        .status(404)
-        .json({ message: "Organization application not found" });
+      return res.status(404).json({ message: 'Organization application not found' });
     }
 
-    // Create user's application
+    const existingApplication = await Application.findOne({ userId, applicationType });
+    if (existingApplication) {
+      return res.status(200).json({
+        message: 'Existing application found',
+        application: existingApplication,
+      });
+    }
+
     const newApplication = new Application({
       userId,
       applicationType,
-      applicationTitle,
-      organizationName,
       step1,
       step2,
       step3,
@@ -49,12 +37,12 @@ const createApplication = async (req, res) => {
     await newApplication.save();
 
     res.status(201).json({
-      message: "Application created successfully",
+      message: 'Application created successfully',
       application: newApplication,
     });
   } catch (error) {
-    console.error("Error creating user application:", error.message);
-    res.status(500).json({ message: "Server error" });
+    console.error('Error creating user application:', error.message);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

@@ -18,6 +18,8 @@ const {
   getAllApplicationsForOrganization,
   approveApplication,
   declineApplication,
+  getPendingApplicationsForOrganization,
+  getApprovedApplicationsForOrganization
 } = require("../controllers/credController");
 const {
   authenticateOrganization,
@@ -82,5 +84,21 @@ router.put("/decline/:applicationId", async (req, res) => {
     return res.status(400).json(result);
   }
 });
+
+router.get('/incoming-applications', async (req, res) => {
+  const { organizationId } = req.params;
+  const result = await getPendingApplicationsForOrganization(organizationId);
+
+  if (result.success) {
+    res.status(200).json(result);
+  } else {
+    res.status(404).json(result);
+  }
+});
+
+router.get(
+  '/approved-applications/:organizationId', getApprovedApplicationsForOrganization
+);
+
 
 module.exports = router;
