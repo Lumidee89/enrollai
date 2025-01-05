@@ -10,6 +10,13 @@ router.get(
   protect,
   applicationController.getApplicationById
 );
+
+router.get(
+  "/getrecentapplication/:userId",
+  protect,
+  applicationController.getMostRecentApplication
+);
+
 router.get(
   "/user/status/:userId",
   protect,

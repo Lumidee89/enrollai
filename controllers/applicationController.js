@@ -4,35 +4,42 @@ const OrganizationApplication = require("../models/Organization");
 
 const createApplication = async (req, res) => {
   try {
-    const { applicationType, step1, step2, step3, organizationApplicationId } =
-      req.body;
+    const {
+      applicationType,
+      step1,
+      step2,
+      step3,
+      organizationApplicationId,
+      applicationTitle,
+      organizationName,
+    } = req.body;
     const userId = req.user._id;
 
+    // Validate user existence
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Validate organization application existence
     const organizationApplication = await OrganizationApplication.findById(
       organizationApplicationId
-    );
+    ).select("-password");
+
+    console.log(organizationApplication, "organizationApplication");
+
     if (!organizationApplication) {
       return res
         .status(404)
         .json({ message: "Organization application not found" });
     }
 
-    // const existingApplication = await Application.findOne({ userId, applicationType });
-    // if (existingApplication) {
-    //   return res.status(200).json({
-    //     message: 'Existing application found',
-    //     application: existingApplication,
-    //   });
-    // }
-
+    // Create user's application
     const newApplication = new Application({
       userId,
       applicationType,
+      applicationTitle,
+      organizationName,
       step1,
       step2,
       step3,
@@ -70,11 +77,10 @@ const getApplicationById = async (req, res) => {
 const getMostRecentApplication = async (req, res) => {
   try {
     const { userId } = req.params;
-
+    console.log(userId, "userIduserIduserId");
     // Find the most recent application for the user
     const recentApplication = await Application.findOne({ userId })
-      .sort({ createdAt: -1 }) // Sort by `createdAt` in descending order
-      .populate("organizationApplication", "name") // Populate organization details if needed
+      .sort({ createdAt: -1 })
       .exec();
 
     if (!recentApplication) {
