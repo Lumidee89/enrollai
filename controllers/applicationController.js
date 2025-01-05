@@ -4,26 +4,31 @@ const OrganizationApplication = require("../models/Organization");
 
 const createApplication = async (req, res) => {
   try {
-    const { applicationType, step1, step2, step3, organizationApplicationId } = req.body;
+    const { applicationType, step1, step2, step3, organizationApplicationId } =
+      req.body;
     const userId = req.user._id;
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    const organizationApplication = await OrganizationApplication.findById(organizationApplicationId);
+    const organizationApplication = await OrganizationApplication.findById(
+      organizationApplicationId
+    );
     if (!organizationApplication) {
-      return res.status(404).json({ message: 'Organization application not found' });
+      return res
+        .status(404)
+        .json({ message: "Organization application not found" });
     }
 
-    const existingApplication = await Application.findOne({ userId, applicationType });
-    if (existingApplication) {
-      return res.status(200).json({
-        message: 'Existing application found',
-        application: existingApplication,
-      });
-    }
+    // const existingApplication = await Application.findOne({ userId, applicationType });
+    // if (existingApplication) {
+    //   return res.status(200).json({
+    //     message: 'Existing application found',
+    //     application: existingApplication,
+    //   });
+    // }
 
     const newApplication = new Application({
       userId,
@@ -37,12 +42,12 @@ const createApplication = async (req, res) => {
     await newApplication.save();
 
     res.status(201).json({
-      message: 'Application created successfully',
+      message: "Application created successfully",
       application: newApplication,
     });
   } catch (error) {
-    console.error('Error creating user application:', error.message);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error creating user application:", error.message);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -58,6 +63,32 @@ const getApplicationById = async (req, res) => {
     res.status(200).json({ application });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const getMostRecentApplication = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find the most recent application for the user
+    const recentApplication = await Application.findOne({ userId })
+      .sort({ createdAt: -1 }) // Sort by `createdAt` in descending order
+      .populate("organizationApplication", "name") // Populate organization details if needed
+      .exec();
+
+    if (!recentApplication) {
+      return res
+        .status(404)
+        .json({ message: "No applications found for the user" });
+    }
+
+    res.status(200).json({
+      message: "Most recent application retrieved successfully",
+      application: recentApplication,
+    });
+  } catch (error) {
+    console.error("Error retrieving most recent application:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -224,4 +255,5 @@ module.exports = {
   updateApplicationStatus,
   getApplicationStatsByUserId,
   getApplicationsByStatusAndUserId,
+  getMostRecentApplication,
 };
