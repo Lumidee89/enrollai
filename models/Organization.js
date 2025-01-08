@@ -27,8 +27,4 @@ OrganizationSchema.pre("save", async function (next) {
   next();
 });
 
-<<<<<<< Updated upstream
 module.exports = mongoose.model("Organization", OrganizationSchema);
-=======
-module.exports = mongoose.model("Organization", OrganizationSchema);
->>>>>>> Stashed changes
