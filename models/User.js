@@ -13,6 +13,8 @@ const UserSchema = new mongoose.Schema({
     password: { type: String, required: true },
     isVerified: { type: Boolean, default: false },
     otp: { type: String },
+    profilePicture: { type: String },
+    profileStatus: { type: Number, default: 33 },
     otpCreatedAt: { type: Date },
     passwordResetToken: { type: String },
     passwordResetExpires: { type: Date },
