@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const upload = require('../utils/multer');
 const fs = require('fs');
 const path = require('path');
+const { logActivity } = require('../controllers/activityController');
 
 exports.register = async (req, res) => {
   const { accountType, fullName, professionalTitle, email, password, confirmPassword } = req.body;
@@ -87,6 +88,8 @@ exports.login = async (req, res) => {
       const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
         expiresIn: '1h',
       });
+
+      await logActivity(user._id, 'login', 'User logged in successfully');
   
       res.status(200).json({
         userId: user._id, 
@@ -199,7 +202,11 @@ exports.updateProfile = async (req, res) => {
       }
       user.profilePicture = req.file.filename;
     }
+    user.profileStatus = 100;
     await user.save();
+
+    await logActivity(user._id, 'profile update', 'User updated profile in successfully');
+
     res.status(200).json({
       msg: 'Profile updated successfully',
       user: {
@@ -228,6 +235,7 @@ exports.changePassword = async (req, res) => {
       user.password = newPassword;
       await user.save();
       res.status(200).json({ msg: 'Password changed successfully' });
+      await logActivity(user._id, 'change password', 'User changed password in successfully');
   } catch (error) {
       res.status(500).json({ msg: 'Server error', error: error.message });
   }

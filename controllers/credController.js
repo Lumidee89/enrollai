@@ -1,5 +1,6 @@
 const Application = require('../models/applicationModel'); 
 const CredentialingApplication = require('../models/credentialingApplication'); 
+const { logActivity } = require('../controllers/activityController');
 
 async function getAllApplicationsForOrganization() {
     try {
@@ -37,6 +38,7 @@ async function getAllApplicationsForOrganization() {
       }
   
       return { success: true, message: 'Application approved.', application };
+      await logActivity(user._id, 'approve application', 'Application approved successfully');
     } catch (error) {
       return { success: false, message: error.message };
     }
