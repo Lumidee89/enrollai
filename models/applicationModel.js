@@ -271,7 +271,7 @@ const applicationSchema = new mongoose.Schema(
     },
     organizationApplication: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Organization",
+      ref: "Credapplication",
       required: true,
     },
     status: {

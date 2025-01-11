@@ -3,6 +3,10 @@ const generateOtp = require('../utils/generateOTP');
 const sendEmail = require('../utils/sendEmail');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const upload = require('../utils/multer');
+const fs = require('fs');
+const path = require('path');
+const { logActivity } = require('../controllers/activityController');
 
 exports.register = async (req, res) => {
   const { accountType, fullName, professionalTitle, email, password, confirmPassword } = req.body;
@@ -84,6 +88,8 @@ exports.login = async (req, res) => {
       const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
         expiresIn: '1h',
       });
+
+      await logActivity(user._id, 'login', 'User logged in successfully');
   
       res.status(200).json({
         userId: user._id, 
@@ -92,7 +98,8 @@ exports.login = async (req, res) => {
         email: user.email,
         isVerified: user.isVerified,
         accountType: user.accountType, 
-        professionalTitle: user.professionalTitle 
+        professionalTitle: user.professionalTitle,
+        profileStatus: user.profileStatus 
       });
     } catch (error) {
       console.error('Login error:', error);
@@ -161,7 +168,7 @@ exports.resendOtp = async (req, res) => {
 
 exports.getUserDetails = async (req, res) => {
   try {
-    const users = await User.find({}, 'fullName email');
+    const users = await User.find({}, 'fullName email profilePicture');
     res.status(200).json(users);
   } catch (error) {
     console.error('Error fetching user details:', error);
@@ -173,22 +180,43 @@ exports.updateProfile = async (req, res) => {
   const { fullName, email } = req.body;
   const userId = req.user.id;
   try {
-      const user = await User.findById(userId);
-      if (!user) {
-          return res.status(404).json({ msg: 'User not found' });
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ msg: 'Email already in use' });
       }
-      if (email && email !== user.email) {
-          const existingUser = await User.findOne({ email });
-          if (existingUser) {
-              return res.status(400).json({ msg: 'Email already in use' });
-          }
+    }
+    user.fullName = fullName || user.fullName;
+    user.email = email || user.email;
+    if (req.file) {
+      if (user.profilePicture) {
+        const oldPath = path.join(__dirname, '../uploads/profile-pictures', user.profilePicture);
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
       }
-      user.fullName = fullName || user.fullName;
-      user.email = email || user.email;
-      await user.save();
-      res.status(200).json({ msg: 'Profile updated successfully', user: { fullName: user.fullName, email: user.email } });
+      user.profilePicture = req.file.filename;
+    }
+    user.profileStatus = 100;
+    await user.save();
+
+    await logActivity(user._id, 'profile update', 'User updated profile in successfully');
+
+    res.status(200).json({
+      msg: 'Profile updated successfully',
+      user: {
+        fullName: user.fullName,
+        email: user.email,
+        profilePicture: user.profilePicture
+      }
+    });
   } catch (error) {
-      res.status(500).json({ msg: 'Server error', error: error.message });
+    res.status(500).json({ msg: 'Server error', error: error.message });
   }
 };
 
@@ -207,6 +235,7 @@ exports.changePassword = async (req, res) => {
       user.password = newPassword;
       await user.save();
       res.status(200).json({ msg: 'Password changed successfully' });
+      await logActivity(user._id, 'change password', 'User changed password in successfully');
   } catch (error) {
       res.status(500).json({ msg: 'Server error', error: error.message });
   }

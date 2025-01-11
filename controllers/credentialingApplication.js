@@ -1,5 +1,6 @@
 const Application = require('../models/credentialingApplication');
 const Organization = require('../models/Organization');
+const { logActivity } = require('../controllers/activityController');
 
 const createApplication = async (req, res) => {
   try {
@@ -18,6 +19,7 @@ const createApplication = async (req, res) => {
       message: 'Application created successfully',
       application,
     });
+    await logActivity(user._id, 'create application', 'Application created successfully');
   } catch (error) {
     console.error('Error creating application:', error.message);
     res.status(500).json({ message: 'Server error' });
