@@ -18,6 +18,7 @@ const UserSchema = new mongoose.Schema({
     otpCreatedAt: { type: Date },
     passwordResetToken: { type: String },
     passwordResetExpires: { type: Date },
+    deleted: { type: Boolean, default: false },
     groups: {
         type: [String] 
     }

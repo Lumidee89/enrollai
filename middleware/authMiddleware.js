@@ -13,7 +13,7 @@ const protect = async (req, res, next) => {
       token = req.headers.authorization.split(" ")[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      console.log("Decoded Token:", decoded);
+      // console.log("Decoded Token:", decoded);
 
       switch (decoded.accountType) {
         case "credentialing_organization":
@@ -27,7 +27,7 @@ const protect = async (req, res, next) => {
           break;
       }
 
-      console.log("Found User/Organization:", req.user);
+      // console.log("Found User/Organization:", req.user);
 
       if (!req.user) {
         return res

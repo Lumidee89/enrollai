@@ -13,5 +13,6 @@ router.get('/resend-otp/:email', authController.resendOtp);
 router.get('/users', authController.getUserDetails);
 router.put('/update-profile', protect, upload.single('profilePicture'), authController.updateProfile);
 router.put('/change-password', protect, authController.changePassword);
+router.delete('/delete', protect, authController.deleteUserAccount);
 
 module.exports = router;
