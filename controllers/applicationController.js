@@ -1,7 +1,7 @@
 const Application = require("../models/applicationModel");
 const User = require("../models/User");
 const OrganizationApplication = require("../models/credentialingApplication");
-const { logActivity } = require('../controllers/activityController');
+const { logActivity } = require("../controllers/activityController");
 
 const createApplication = async (req, res) => {
   try {
@@ -15,7 +15,7 @@ const createApplication = async (req, res) => {
       organizationName,
     } = req.body;
     const userId = req.user._id;
-    
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -24,6 +24,7 @@ const createApplication = async (req, res) => {
     const organizationApplication = await OrganizationApplication.findById(
       organizationApplicationId
     ).select("-password");
+
     if (!organizationApplication) {
       return res
         .status(404)
@@ -42,12 +43,12 @@ const createApplication = async (req, res) => {
     });
 
     await newApplication.save();
-    await User.findByIdAndUpdate(
-      userId,
-      { profileStatus: 88 },
-      { new: true }
+    await User.findByIdAndUpdate(userId, { profileStatus: 88 }, { new: true });
+    await logActivity(
+      user._id,
+      "create application",
+      "User created an application successfully"
     );
-    await logActivity(user._id, 'create application', 'User created an application successfully');
 
     res.status(201).json({
       message: "Application created successfully",
@@ -208,7 +209,11 @@ const deleteApplication = async (req, res) => {
       return res.status(404).json({ message: "Application not found" });
     }
     res.status(200).json({ message: "Application deleted successfully" });
-    await logActivity(user._id, 'delete application', 'User deleted an application successfully');
+    await logActivity(
+      user._id,
+      "delete application",
+      "User deleted an application successfully"
+    );
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
