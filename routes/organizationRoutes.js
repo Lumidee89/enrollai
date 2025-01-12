@@ -3,7 +3,7 @@ const router = express.Router();
 const {registerOrganization, loginOrganization, getOrganizationDetails, updateOrganizationDetails, changeOrganizationPassword, getAllOrganizations, getOrganizationDetailsByID, deleteOrganization} = require("../controllers/organizationController");
 const { protect, authorize } = require("../middleware/authMiddleware");
 const {createApplication, getApplications, getApplicationsByOrganization} = require("../controllers/credentialingApplication");
-const {getAllApplicationsForOrganization, approveApplication, declineApplication, getPendingApplicationsForOrganization, getApprovedApplicationsForOrganization} = require("../controllers/credController");
+const {getAllApplicationsForOrganization, approveApplication, declineApplication, getPendingApplicationsForOrganization, getApprovedApplicationsForOrganization, getUserDetailsByBearerToken} = require("../controllers/credController");
 const {authenticateOrganization} = require("../controllers/organizationController");
 
 router.post("/register", registerOrganization);
@@ -53,6 +53,21 @@ router.get('/incoming-applications', async (req, res) => {
     res.status(200).json(result);
   } else {
     res.status(404).json(result);
+  }
+});
+
+router.get('/get-providers', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'No token provided.' });
+  }
+
+  const result = await getUserDetailsByBearerToken(token);
+  if (result.success) {
+    res.status(200).json(result);
+  } else {
+    res.status(400).json(result);
   }
 });
 

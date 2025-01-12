@@ -1,5 +1,7 @@
 const Application = require('../models/applicationModel'); 
 const CredentialingApplication = require('../models/credentialingApplication'); 
+const User = require('../models/User'); 
+const jwt = require('jsonwebtoken');
 const { logActivity } = require('../controllers/activityController');
 
 async function getAllApplicationsForOrganization() {
@@ -106,7 +108,28 @@ async function getAllApplicationsForOrganization() {
         error: error.message,
       });
     }
-  }  
+  }
+
+  async function getUserDetailsByBearerToken(token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const credentialingProviderId = decoded.id;
+  
+      const application = await Application.findOne({
+        userId: credentialingProviderId,
+        status: 'approved',
+      }).populate('userId', '-password'); 
+  
+      if (!application) {
+        return { success: false, message: 'No approved application found for this user.' };
+      }
+  
+      const userDetails = application.userId;
+      return { success: true, userDetails };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  }
   
   module.exports = {
     getAllApplicationsForOrganization,
@@ -114,4 +137,5 @@ async function getAllApplicationsForOrganization() {
     declineApplication,
     getPendingApplicationsForOrganization,
     getApprovedApplicationsForOrganization,
+    getUserDetailsByBearerToken
   };
