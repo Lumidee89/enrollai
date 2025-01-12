@@ -65,9 +65,10 @@ async function getAllApplicationsForOrganization() {
   async function getPendingApplicationsForOrganization(organizationId) {
     try {
       const pendingApplications = await Application.find({
-        organizationApplication: organizationId,
+        'organizationRecipient': organizationId,
         status: 'pending',
-      });
+      }).populate('provider', 'name email')
+        .populate('organizationRecipient', 'name');
   
       if (!pendingApplications || pendingApplications.length === 0) {
         return { success: false, message: 'No pending applications found.' };
@@ -77,7 +78,7 @@ async function getAllApplicationsForOrganization() {
     } catch (error) {
       return { success: false, message: error.message };
     }
-  }  
+  }
 
   async function getApprovedApplicationsForOrganization(req, res) {
     try {

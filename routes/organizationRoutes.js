@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const {registerOrganization, loginOrganization, getOrganizationDetails, updateOrganizationDetails, changeOrganizationPassword, getAllOrganizations, getOrganizationDetailsByID, deleteOrganization} = require("../controllers/organizationController");
 const { protect, authorize } = require("../middleware/authMiddleware");
-const {createApplication, getApplications} = require("../controllers/credentialingApplication");
+const {createApplication, getApplications, getApplicationsByOrganization} = require("../controllers/credentialingApplication");
 const {getAllApplicationsForOrganization, approveApplication, declineApplication, getPendingApplicationsForOrganization, getApprovedApplicationsForOrganization} = require("../controllers/credController");
 const {authenticateOrganization} = require("../controllers/organizationController");
 
@@ -16,6 +16,7 @@ router.get("/details/:id", authenticateOrganization, getOrganizationDetailsByID)
 router.put("/update", authenticateOrganization, updateOrganizationDetails);
 router.put("/change-password", authenticateOrganization, changeOrganizationPassword);
 router.delete("/delete", authenticateOrganization, deleteOrganization);
+router.get('/orgapplications', protect, getApplicationsByOrganization);
 router.get("/applications", async (req, res) => {
 const result = await getAllApplicationsForOrganization();
   if (result.success) {
