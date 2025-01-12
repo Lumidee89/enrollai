@@ -46,6 +46,7 @@ const registerOrganization = async (req, res) => {
         organizationName: newOrganization.organizationName,
         administratorFullName: newOrganization.administratorFullName,
         workEmail: newOrganization.workEmail,
+        profileStatus: newOrganization.profileStatus, 
       },
     });
   } catch (error) {
@@ -200,9 +201,15 @@ const updateOrganizationDetails = async (req, res) => {
   try {
     const { organizationName, administratorFullName, workEmail } = req.body;
 
+    const updateData = { organizationName, administratorFullName, workEmail };
+
+    if (req.file) { updateData.profilePicture = req.file.path; }
+
+    updateData.profileStatus = 100;
+
     const updatedOrganization = await Organization.findByIdAndUpdate(
       req.organizationId,
-      { organizationName, administratorFullName, workEmail },
+      updateData,
       { new: true, runValidators: true }
     );
 
@@ -218,6 +225,7 @@ const updateOrganizationDetails = async (req, res) => {
         organizationName: updatedOrganization.organizationName,
         administratorFullName: updatedOrganization.administratorFullName,
         workEmail: updatedOrganization.workEmail,
+        profilePicture: updatedOrganization.profilePicture,
       },
     });
   } catch (error) {

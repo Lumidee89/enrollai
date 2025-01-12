@@ -15,6 +15,8 @@ const OrganizationSchema = new mongoose.Schema({
   administratorFullName: { type: String, required: true },
   workEmail: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  profilePicture: { type: String },
+  profileStatus: { type: Number, default: 50 },
   createdAt: { type: Date, default: Date.now },
 });
 

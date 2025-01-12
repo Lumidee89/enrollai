@@ -5,6 +5,7 @@ const { protect, authorize } = require("../middleware/authMiddleware");
 const {createApplication, getApplications, getApplicationsByOrganization} = require("../controllers/credentialingApplication");
 const {getAllApplicationsForOrganization, approveApplication, declineApplication, getPendingApplicationsForOrganization, getApprovedApplicationsForOrganization, getUserDetailsByBearerToken} = require("../controllers/credController");
 const {authenticateOrganization} = require("../controllers/organizationController");
+const upload = require('../utils/multer');
 
 router.post("/register", registerOrganization);
 router.post("/login", loginOrganization);
@@ -13,7 +14,7 @@ router.get("/getApplications", protect, getApplications);
 router.get("/getApplications/all", protect, getAllOrganizations);
 router.get("/details", authenticateOrganization, getOrganizationDetails);
 router.get("/details/:id", authenticateOrganization, getOrganizationDetailsByID);
-router.put("/update", authenticateOrganization, updateOrganizationDetails);
+router.put("/update", authenticateOrganization, upload.single('profilePicture'), updateOrganizationDetails);
 router.put("/change-password", authenticateOrganization, changeOrganizationPassword);
 router.delete("/delete", authenticateOrganization, deleteOrganization);
 router.get('/orgapplications', protect, getApplicationsByOrganization);

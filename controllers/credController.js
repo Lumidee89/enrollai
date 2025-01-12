@@ -39,8 +39,17 @@ async function getAllApplicationsForOrganization() {
         return { success: false, message: 'Application not found.' };
       }
   
-      return { success: true, message: 'Application approved.', application };
-      await logActivity(user._id, 'approve application', 'Application approved successfully');
+      if (!organization) {
+        return { success: false, message: 'Organization not found.' };
+      }
+  
+      await logActivity(application.organizationId, 'approve-application', 'Application approved successfully');
+  
+      return { 
+        success: true, 
+        message: 'Application approved and profile status updated to 100%.', 
+        application 
+      };
     } catch (error) {
       return { success: false, message: error.message };
     }

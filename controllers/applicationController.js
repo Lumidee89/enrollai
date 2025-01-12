@@ -211,7 +211,7 @@ const deleteApplication = async (req, res) => {
     res.status(200).json({ message: "Application deleted successfully" });
     await logActivity(
       user._id,
-      "delete application",
+      "delete-application",
       "User deleted an application successfully"
     );
   } catch (error) {
