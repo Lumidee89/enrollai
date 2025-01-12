@@ -78,6 +78,7 @@ const loginOrganization = async (req, res) => {
         organizationName: organization.organizationName,
         administratorFullName: organization.administratorFullName,
         workEmail: organization.workEmail,
+        ...organization._doc,
       },
     });
   } catch (error) {
