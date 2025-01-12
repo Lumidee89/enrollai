@@ -26,6 +26,7 @@ exports.register = async (req, res) => {
       professionalTitle,
       email,
       password,
+      createdAt: new Date()
     });
 
     user.otp = generateOtp(); 
@@ -99,6 +100,7 @@ exports.login = async (req, res) => {
         isVerified: user.isVerified,
         accountType: user.accountType, 
         professionalTitle: user.professionalTitle,
+        createdAt: user.createdAt,
         profileStatus: user.profileStatus,
         profilePicture: user.profilePicture || null,
       });
