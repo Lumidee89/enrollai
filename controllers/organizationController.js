@@ -46,7 +46,7 @@ const registerOrganization = async (req, res) => {
         organizationName: newOrganization.organizationName,
         administratorFullName: newOrganization.administratorFullName,
         workEmail: newOrganization.workEmail,
-        profileStatus: newOrganization.profileStatus, 
+        profileStatus: newOrganization.profileStatus,
       },
     });
   } catch (error) {
@@ -199,11 +199,21 @@ const getAllOrganizations = async (req, res) => {
 
 const updateOrganizationDetails = async (req, res) => {
   try {
-    const { organizationName, administratorFullName, workEmail } = req.body;
+    const {
+      organizationName,
+      administratorFullName,
+      workEmail,
+      profilePicture,
+    } = req.body;
 
-    const updateData = { organizationName, administratorFullName, workEmail };
+    const updateData = {
+      organizationName,
+      administratorFullName,
+      workEmail,
+      profilePicture,
+    };
 
-    if (req.file) { updateData.profilePicture = req.file.path; }
+    // if (req.file) { updateData.profilePicture = req.file.path; }
 
     updateData.profileStatus = 100;
 
