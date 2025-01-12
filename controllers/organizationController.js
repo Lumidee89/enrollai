@@ -253,6 +253,26 @@ const changeOrganizationPassword = async (req, res) => {
   }
 };
 
+const deleteOrganization = async (req, res) => {
+  try {
+    const organizationId = req.organizationId;
+
+    const organization = await Organization.findByIdAndDelete(organizationId);
+
+    if (!organization) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Organization account deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting organization account:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   authenticateOrganization,
   registerOrganization,
@@ -264,4 +284,5 @@ module.exports = {
   changeOrganizationPassword,
   getAllOrganizations,
   getOrganizationDetailsByID,
+  deleteOrganization,
 };
