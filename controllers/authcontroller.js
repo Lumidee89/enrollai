@@ -99,7 +99,8 @@ exports.login = async (req, res) => {
         isVerified: user.isVerified,
         accountType: user.accountType, 
         professionalTitle: user.professionalTitle,
-        profileStatus: user.profileStatus 
+        profileStatus: user.profileStatus,
+        profilePicture: user.profilePicture || null,
       });
     } catch (error) {
       console.error('Login error:', error);
