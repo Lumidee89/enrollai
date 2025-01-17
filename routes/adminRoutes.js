@@ -1,11 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const { protect, authorize } = require('../middleware/authMiddleware');
-const { getAllApplications, getAllProviders } = require('../controllers/adminController');
+const { getAllApplications, getAllProviders, createSuperAdmin } = require('../controllers/adminController');
 const Organization = require('../models/Organization');
 
 router.get('/all', protect, authorize('super_admin'), getAllApplications);
 router.get('/providers', protect, authorize('super_admin'), getAllProviders);
+router.post('/create', protect, authorize('super_admin'), createSuperAdmin);
 router.get(
     '/credentialing-organizations',
     protect,
