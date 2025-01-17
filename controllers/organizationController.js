@@ -68,9 +68,7 @@ const loginOrganization = async (req, res) => {
     }
     const token = jwt.sign(
       { userId: organization._id, accountType: "credentialing_organization" },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+      process.env.JWT_SECRET);
     res.status(200).json({
       message: "Login successful",
       token,
