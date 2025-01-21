@@ -19,7 +19,7 @@ const createApplication = async (req, res) => {
       message: 'Application created successfully',
       application,
     });
-    await logActivity(user._id, 'create application', 'Application created successfully');
+    await logActivity(user._id, 'createapplication', 'Application created successfully');
   } catch (error) {
     console.error('Error creating application:', error.message);
     res.status(500).json({ message: 'Server error' });
@@ -56,4 +56,27 @@ const getApplicationsByOrganization = async (req, res) => {
   }
 };
 
-module.exports = { createApplication, getApplications, getApplicationsByOrganization };
+const deleteApplication = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const application = await Application.findById(id);
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+    const organizationId = req.user._id;
+    if (application.organization.toString() !== organizationId.toString()) {
+      return res.status(403).json({
+        message: 'You are not authorized to delete this application',
+      });
+    }
+    await Application.findByIdAndDelete(id);
+    res.status(200).json({ message: 'Application deleted successfully' });
+
+    await logActivity(req.user._id, 'delete-application', 'Application deleted successfully');
+  } catch (error) {
+    console.error('Error deleting application:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+module.exports = { createApplication, getApplications, getApplicationsByOrganization, deleteApplication };
