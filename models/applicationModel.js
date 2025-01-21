@@ -10,13 +10,6 @@ const applicationSchema = new mongoose.Schema(
     applicationType: {
       type: String,
       required: true,
-      // enum: [
-      //   "credentialing request",
-      //   "health plan",
-      //   "health insurance",
-      //   "licensing",
-      //   "credentialing",
-      // ],
     },
     applicationTitle: {
       type: String,
