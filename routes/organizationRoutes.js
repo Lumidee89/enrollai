@@ -3,7 +3,8 @@ const router = express.Router();
 const {registerOrganization, loginOrganization, getOrganizationDetails, updateOrganizationDetails, changeOrganizationPassword, getAllOrganizations, getOrganizationDetailsByID, deleteOrganization} = require("../controllers/organizationController");
 const { protect, authorize } = require("../middleware/authMiddleware");
 const {createApplication, getApplications, getApplicationsByOrganization, deleteApplication} = require("../controllers/credentialingApplication");
-const {getAllApplicationsForOrganization, approveApplication, declineApplication, getPendingApplicationsForOrganization, getApprovedApplicationsForOrganization, getUserDetailsByBearerToken} = require("../controllers/credController");
+const {getAllApplicationsForOrganization, approveApplication, declineApplication, getPendingApplicationsForOrganization, 
+  getApprovedApplicationsForOrganization, getUserDetailsByBearerToken, fetchApplicationsByOrganization} = require("../controllers/credController");
 const {authenticateOrganization} = require("../controllers/organizationController");
 const upload = require('../utils/multer');
 
@@ -18,6 +19,7 @@ router.put("/update", authenticateOrganization, upload.single('profilePicture'),
 router.put("/change-password", authenticateOrganization, changeOrganizationPassword);
 router.delete("/delete", authenticateOrganization, deleteOrganization);
 router.get('/orgapplications', protect, getApplicationsByOrganization);
+router.get("/incoming/:organizationApplicationId", fetchApplicationsByOrganization); 
 router.delete('/:id', protect, authorize('credentialing_organization'), deleteApplication);
 router.get("/applications", async (req, res) => {
 const result = await getAllApplicationsForOrganization();

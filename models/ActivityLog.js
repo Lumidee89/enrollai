@@ -4,7 +4,7 @@ const activityLogSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   actionType: {
     type: String,
-    enum: ['login', 'profile-update', 'delete-application', 'approve-application', 'createapplication', 
+    enum: ['login', 'profile-update', 'delete-application', 'approve-application', 'createapplication', 'create-application', 
       'delete-application' ],
     required: true
   },

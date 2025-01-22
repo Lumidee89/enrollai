@@ -1,7 +1,6 @@
 const Application = require('../models/applicationModel'); 
-const CredentialingApplication = require('../models/credentialingApplication'); 
+const OrganizationApplication = require('../models/credentialingApplication');
 const User = require('../models/User'); 
-const jwt = require('jsonwebtoken');
 const { logActivity } = require('../controllers/activityController');
 
 async function getAllApplicationsForOrganization() {
@@ -139,6 +138,35 @@ async function getAllApplicationsForOrganization() {
       return { success: false, message: error.message };
     }
   }
+
+  const fetchApplicationsByOrganization = async (req, res) => {
+    try {
+      const { organizationApplicationId } = req.params; // Organization ID passed as a URL parameter
+  
+      // Check if the organization exists
+      const organization = await OrganizationApplication.findById(organizationApplicationId);
+      if (!organization) {
+        return res.status(404).json({ message: "Credentialing organization not found" });
+      }
+  
+      // Fetch applications associated with the organization
+      const applications = await Application.find({
+        organizationApplication: organizationApplicationId,
+      }).populate("userId", "firstName lastName email"); // Populate user details if necessary
+  
+      if (applications.length === 0) {
+        return res.status(404).json({ message: "No applications found for this organization" });
+      }
+  
+      res.status(200).json({
+        message: "Applications fetched successfully",
+        applications,
+      });
+    } catch (error) {
+      console.error("Error fetching applications:", error.message);
+      res.status(500).json({ message: "Server error" });
+    }
+  };  
   
   module.exports = {
     getAllApplicationsForOrganization,
@@ -146,5 +174,6 @@ async function getAllApplicationsForOrganization() {
     declineApplication,
     getPendingApplicationsForOrganization,
     getApprovedApplicationsForOrganization,
-    getUserDetailsByBearerToken
+    getUserDetailsByBearerToken,
+    fetchApplicationsByOrganization
   };

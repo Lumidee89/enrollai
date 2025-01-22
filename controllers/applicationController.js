@@ -46,7 +46,7 @@ const createApplication = async (req, res) => {
     await User.findByIdAndUpdate(userId, { profileStatus: 88 }, { new: true });
     await logActivity(
       user._id,
-      "create application",
+      "create-application",
       "User created an application successfully"
     );
 
