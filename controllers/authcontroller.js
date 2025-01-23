@@ -33,14 +33,17 @@ exports.register = async (req, res) => {
       email,
       password,
       createdAt: new Date(),
+
+      //
+      isVerified: true,
     });
 
-    user.otp = generateOtp();
-    user.otpCreatedAt = new Date();
+    // user.otp = generateOtp();
+    // user.otpCreatedAt = new Date();
 
     await user.save();
 
-    await sendEmail(user.email, "OTP Verification", `Your OTP is ${user.otp}`);
+    // await sendEmail(user.email, "OTP Verification", `Your OTP is ${user.otp}`);
 
     res
       .status(200)
@@ -229,7 +232,7 @@ exports.updateProfile = async (req, res) => {
     await user.save();
 
     await logActivity(
-      user._id,
+      userId,
       "profile update",
       "User updated profile in successfully"
     );

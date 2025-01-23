@@ -3,6 +3,8 @@ const User = require("../models/User");
 const OrganizationApplication = require("../models/credentialingApplication");
 const { logActivity } = require("../controllers/activityController");
 
+const mongoose = require("mongoose");
+
 const createApplication = async (req, res) => {
   try {
     const {
@@ -15,6 +17,13 @@ const createApplication = async (req, res) => {
       organizationName,
     } = req.body;
     const userId = req.user._id;
+
+    // Validate the organizationApplicationId
+    if (!mongoose.Types.ObjectId.isValid(organizationApplicationId)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid organization application ID" });
+    }
 
     const user = await User.findById(userId);
     if (!user) {
