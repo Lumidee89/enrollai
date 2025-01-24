@@ -2,30 +2,7 @@ const Application = require("../models/applicationModel");
 const OrganizationApplication = require("../models/credentialingApplication");
 const User = require("../models/User");
 const { logActivity } = require("../controllers/activityController");
-const Organization = require("../models/Organization");
-
-async function getAllApplicationsForOrganization() {
-  try {
-    const applications = await Application.find();
-
-    if (!applications || applications.length === 0) {
-      return { success: false, message: "No applications found." };
-    }
-
-    const groupedApplications = applications.reduce((acc, application) => {
-      const { organizationApplication } = application;
-      if (!acc[organizationApplication]) {
-        acc[organizationApplication] = [];
-      }
-      acc[organizationApplication].push(application);
-      return acc;
-    }, {});
-
-    return { success: true, groupedApplications };
-  } catch (error) {
-    return { success: false, message: error.message };
-  }
-}
+const jwt = require("jsonwebtoken");
 
 async function approveApplication(applicationId) {
   try {
@@ -39,15 +16,15 @@ async function approveApplication(applicationId) {
       return { success: false, message: "Application not found." };
     }
 
-    if (!organization) {
-      return { success: false, message: "Organization not found." };
-    }
+    // if (!organization) {
+    //   return { success: false, message: "Organization not found." };
+    // }
 
-    await logActivity(
-      application.organizationId,
-      "approve-application",
-      "Application approved successfully"
-    );
+    // await logActivity(
+    //   application.organizationId,
+    //   "approve-application",
+    //   "Application approved successfully"
+    // );
 
     return {
       success: true,
@@ -99,8 +76,9 @@ async function getPendingApplicationsForOrganization(organization_name) {
 async function getApprovedApplicationsForOrganization(req, res) {
   try {
     const { organizationId } = req.params;
+
     const approvedApplications = await Application.find({
-      organizationApplication: organizationId,
+      organizationName: organizationId,
       status: "approved",
     });
 
@@ -119,6 +97,82 @@ async function getApprovedApplicationsForOrganization(req, res) {
     res.status(500).json({
       success: false,
       message: "An error occurred while fetching approved applications.",
+      error: error.message,
+    });
+  }
+}
+
+async function getAllApplicationsForOrganization(organization_name) {
+  try {
+    const allAppllications = await Application.find({
+      organizationName: organization_name,
+    });
+
+    if (!allAppllications || allAppllications.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No applications found for this organization.",
+      });
+    }
+
+    return { success: true, allAppllications };
+  } catch (error) {
+    console.error("Error fetching all applications:", error.message);
+    return { success: false, message: error.message };
+  }
+}
+
+async function getApprovedProviders(req, res) {
+  try {
+    const { organizationId } = req.params;
+
+    //   Find approved applications for the organization
+    const approvedApplications = await Application.find({
+      organizationName: organizationId,
+      status: "approved",
+    });
+
+    if (!approvedApplications || approvedApplications.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No approved applications found for this organization.",
+      });
+    }
+
+    //   Extract userIds from approved applications
+    const userIds = approvedApplications.map((app) => app.userId);
+
+    //   Fetch user details using the userIds
+    const users = await User.find({ _id: { $in: userIds } });
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No users found for the approved applications.",
+      });
+    }
+
+    //   Return the users and their corresponding applications
+    const response = users.map((user) => ({
+      user,
+      applications: approvedApplications.filter(
+        (app) => app.userId.toString() === user._id.toString()
+      ),
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data: response,
+    });
+  } catch (error) {
+    console.error(
+      "Error fetching approved applications and users:",
+      error.message
+    );
+    return res.status(500).json({
+      success: false,
+      message:
+        "An error occurred while fetching approved applications and users.",
       error: error.message,
     });
   }
@@ -191,4 +245,5 @@ module.exports = {
   getApprovedApplicationsForOrganization,
   getUserDetailsByBearerToken,
   fetchApplicationsByOrganization,
+  getApprovedProviders,
 };

@@ -18,13 +18,14 @@ const {
   deleteApplication,
 } = require("../controllers/credentialingApplication");
 const {
-  getAllApplicationsForOrganization,
   approveApplication,
   declineApplication,
   getPendingApplicationsForOrganization,
   getApprovedApplicationsForOrganization,
   getUserDetailsByBearerToken,
   fetchApplicationsByOrganization,
+  getAllApplicationsForOrganization,
+  getApprovedProviders,
 } = require("../controllers/credController");
 const {
   authenticateOrganization,
@@ -70,17 +71,41 @@ router.delete(
   authorize("credentialing_organization"),
   deleteApplication
 );
+
 router.get("/applications", async (req, res) => {
-  const result = await getAllApplicationsForOrganization();
-  if (result.success) {
-    return res.status(200).json(result);
-  } else {
-    return res.status(400).json(result);
+  try {
+    const { organization_name } = req.query;
+
+    if (!organization_name) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Organization is required" });
+    }
+
+    const result = await getAllApplicationsForOrganization(organization_name);
+
+    if (result.success) {
+      return res.status(200).json(result);
+    } else {
+      return res
+        .status(404)
+        .json({ success: false, message: "No applications found" });
+    }
+  } catch (error) {
+    console.error("Error fetching all applications:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
 router.put("/approve/:applicationId", async (req, res) => {
   const { applicationId } = req.params;
+
+  if (!applicationId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Organization is required" });
+  }
+
   const result = await approveApplication(applicationId);
   if (result.success) {
     return res.status(200).json(result);
@@ -126,22 +151,24 @@ router.get("/incoming-applications", async (req, res) => {
   }
 });
 
-router.get("/get-providers", async (req, res) => {
-  const token = req.headers.authorization?.split(" ")[1];
+router.get("/get-providers/:organizationId", getApprovedProviders);
 
-  if (!token) {
-    return res
-      .status(401)
-      .json({ success: false, message: "No token provided." });
-  }
+// router.get("/get-providers", async (req, res) => {
+//   const token = req.headers.authorization?.split(" ")[1];
 
-  const result = await getUserDetailsByBearerToken(token);
-  if (result.success) {
-    res.status(200).json(result);
-  } else {
-    res.status(400).json(result);
-  }
-});
+//   if (!token) {
+//     return res
+//       .status(401)
+//       .json({ success: false, message: "No token provided." });
+//   }
+
+//   const result = await getUserDetailsByBearerToken(token);
+//   if (result.success) {
+//     res.status(200).json(result);
+//   } else {
+//     res.status(400).json(result);
+//   }
+// });
 
 router.get(
   "/approved-applications/:organizationId",
