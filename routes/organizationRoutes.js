@@ -26,6 +26,7 @@ const {
   fetchApplicationsByOrganization,
   getAllApplicationsForOrganization,
   getApprovedProviders,
+  getApplicationStatsForOrganization,
 } = require("../controllers/credController");
 const {
   authenticateOrganization,
@@ -150,6 +151,11 @@ router.get("/incoming-applications", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
+router.get(
+  "/:organizationName/application-stats",
+  getApplicationStatsForOrganization
+);
 
 router.get("/get-providers/:organizationId", getApprovedProviders);
 

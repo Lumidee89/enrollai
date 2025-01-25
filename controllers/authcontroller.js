@@ -98,8 +98,8 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
 
-    if (!user.isVerified)
-      return res.status(400).json({ msg: "Account not verified" });
+    // if (!user.isVerified)
+    //   return res.status(400).json({ msg: "Account not verified" });
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
 

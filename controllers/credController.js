@@ -16,16 +16,6 @@ async function approveApplication(applicationId) {
       return { success: false, message: "Application not found." };
     }
 
-    // if (!organization) {
-    //   return { success: false, message: "Organization not found." };
-    // }
-
-    // await logActivity(
-    //   application.organizationId,
-    //   "approve-application",
-    //   "Application approved successfully"
-    // );
-
     return {
       success: true,
       message: "Application approved and profile status updated to 100%.",
@@ -178,6 +168,41 @@ async function getApprovedProviders(req, res) {
   }
 }
 
+async function getApplicationStatsForOrganization(req, res) {
+  try {
+    const { organizationName } = req.params;
+
+    // Fetch applications and group by status
+    const statusStats = await Application.aggregate([
+      { $match: { organizationName } },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]);
+
+    // Format the statistics
+    const stats = {
+      pending: 0,
+      approved: 0,
+      declined: 0,
+    };
+
+    statusStats.forEach((stat) => {
+      stats[stat._id] = stat.count;
+    });
+
+    return res.status(200).json({
+      success: true,
+      stats,
+    });
+  } catch (error) {
+    console.error("Error fetching application statistics:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching statistics.",
+      error: error.message,
+    });
+  }
+}
+
 async function getUserDetailsByBearerToken(token) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -204,7 +229,7 @@ async function getUserDetailsByBearerToken(token) {
 
 const fetchApplicationsByOrganization = async (req, res) => {
   try {
-    const { organizationApplicationId } = req.params; // Organization ID passed as a URL parameter
+    const { organizationApplicationId } = req.params;
 
     // Check if the organization exists
     const organization = await OrganizationApplication.findById(
@@ -219,7 +244,7 @@ const fetchApplicationsByOrganization = async (req, res) => {
     // Fetch applications associated with the organization
     const applications = await Application.find({
       organizationApplication: organizationApplicationId,
-    }).populate("userId", "firstName lastName email"); // Populate user details if necessary
+    }).populate("userId", "firstName lastName email");
 
     if (applications.length === 0) {
       return res
@@ -246,4 +271,5 @@ module.exports = {
   getUserDetailsByBearerToken,
   fetchApplicationsByOrganization,
   getApprovedProviders,
+  getApplicationStatsForOrganization,
 };
