@@ -1,6 +1,7 @@
 const Application = require("../models/applicationModel");
 const Organization = require("../models/Organization");
 const User = require("../models/User");
+const { logActivity } = require("./activityController");
 
 exports.createSuperAdmin = async (req, res) => {
   try {
@@ -250,30 +251,6 @@ exports.getAllOrganizations = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error. Please try again later.",
-    });
-  }
-};
-
-exports.updateProfile = async (req, res) => {
-  const { fullName, profilePicture } = req.body;
-
-  const userId = req.user.id;
-
-  try {
-    const user = await User.findById(userId);
-
-    if (!user) return res(404).json({ msg: "User not found" });
-
-    user.fullName = fullName || user.fullName;
-    user.profilePicture = profilePicture || user.profilePicture;
-
-    await user.save();
-
-    return res.status(200).json({ msg: "Profile updated successfully", user });
-  } catch (error) {
-    res.status(500).json({
-      msg: "Server error. Please try again later",
-      error: error.message,
     });
   }
 };

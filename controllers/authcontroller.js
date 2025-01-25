@@ -202,7 +202,7 @@ exports.getUserDetails = async (req, res) => {
 };
 
 exports.updateProfile = async (req, res) => {
-  const { fullName, email, profilePicture } = req.body;
+  const { fullName, profilePicture } = req.body;
   const userId = req.user.id;
   try {
     const user = await User.findById(userId);
@@ -210,14 +210,7 @@ exports.updateProfile = async (req, res) => {
       return res.status(404).json({ msg: "User not found" });
     }
 
-    if (email && email !== user.email) {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ msg: "Email already in use" });
-      }
-    }
     user.fullName = fullName || user.fullName;
-    user.email = email || user.email;
     user.profilePicture = profilePicture || user.profilePicture;
 
     user.profileStatus = 100;
@@ -225,17 +218,13 @@ exports.updateProfile = async (req, res) => {
 
     await logActivity(
       userId,
-      "profile update",
+      "update profile",
       "User updated profile in successfully"
     );
 
     res.status(200).json({
       msg: "Profile updated successfully",
-      user: {
-        fullName: user.fullName,
-        email: user.email,
-        profilePicture: user.profilePicture,
-      },
+      user,
     });
   } catch (error) {
     res.status(500).json({ msg: "Server error", error: error.message });

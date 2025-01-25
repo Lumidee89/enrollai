@@ -8,12 +8,11 @@ const {
   getApplicationStats,
   getAllOrganizations,
   getAllApplicationsBasedOnStatus,
-  updateAdminProfile,
-  updateProfile,
+
   getAllAdmins,
   deleteAdminAccount,
-  changeAdminPassword,
 } = require("../controllers/adminController");
+const { updateProfile } = require("../controllers/authcontroller");
 
 router.post("/create", protect, authorize("super_admin"), createSuperAdmin);
 

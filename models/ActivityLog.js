@@ -1,17 +1,24 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const activityLogSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   actionType: {
     type: String,
-    enum: ['login', 'profile-update', 'delete-application', 'approve-application', 'createapplication', 'create-application', 
-      'delete-application' ],
-    required: true
+    enum: [
+      "login",
+      "update profile",
+      "delete-application",
+      "approve-application",
+      "createapplication",
+      "create-application",
+      "delete-application",
+    ],
+    required: true,
   },
   actionDetails: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now }
+  timestamp: { type: Date, default: Date.now },
 });
 
-const ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
+const ActivityLog = mongoose.model("ActivityLog", activityLogSchema);
 
 module.exports = ActivityLog;
