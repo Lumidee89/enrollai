@@ -3,10 +3,9 @@ const generateOtp = require("../utils/generateOTP");
 const sendEmail = require("../utils/sendEmail");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const upload = require("../utils/multer");
-const fs = require("fs");
-const path = require("path");
 const { logActivity } = require("../controllers/activityController");
+const emailTemplates = require("../utils/emailTemplate");
+require("dotenv").config();
 
 exports.register = async (req, res) => {
   const {
@@ -33,17 +32,17 @@ exports.register = async (req, res) => {
       email,
       password,
       createdAt: new Date(),
-
-      //
-      isVerified: true,
     });
 
-    // user.otp = generateOtp();
-    // user.otpCreatedAt = new Date();
+    user.otp = generateOtp();
+    user.otpCreatedAt = new Date();
 
     await user.save();
 
-    // await sendEmail(user.email, "OTP Verification", `Your OTP is ${user.otp}`);
+    const emailSubject = "OTP Verification Code";
+    const emailText = emailTemplates.otpVerification(user.otp);
+
+    await sendEmail(user.email, emailSubject, emailText);
 
     res
       .status(200)
@@ -98,8 +97,8 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
 
-    // if (!user.isVerified)
-    //   return res.status(400).json({ msg: "Account not verified" });
+    if (!user.isVerified)
+      return res.status(400).json({ msg: "Account not verified" });
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
 
@@ -135,11 +134,10 @@ exports.forgotPassword = async (req, res) => {
 
     await user.save();
 
-    await sendEmail(
-      user.email,
-      "Password Reset OTP",
-      `Your OTP is ${user.otp}`
-    );
+    const emailSubject = "Password Reset OTP";
+    const emailText = emailTemplates.otpVerification(user.otp);
+
+    await sendEmail(user.email, emailSubject, emailText);
 
     res.status(200).json({ msg: "OTP sent to your email" });
   } catch (error) {
@@ -152,8 +150,9 @@ exports.resetPassword = async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user || user.otp !== otp)
-      return res.status(400).json({ msg: "Invalid OTP" });
+
+    // if (!user || user.otp !== otp)
+    //   return res.status(400).json({ msg: "Invalid OTP" });
 
     user.password = newPassword;
     user.otp = undefined;
@@ -174,13 +173,13 @@ exports.resendOtp = async (req, res) => {
 
     if (!user.isVerified) {
       user.otp = generateOtp();
+      user.otpCreatedAt = new Date();
       await user.save();
 
-      await sendEmail(
-        user.email,
-        "OTP Verification",
-        `Your new OTP is ${user.otp}`
-      );
+      const emailSubject = "OTP Verification Code";
+      const emailText = emailTemplates.otpVerification(user.otp);
+
+      await sendEmail(user.email, emailSubject, emailText);
 
       res.status(200).json({ msg: "New OTP sent to your email" });
     } else {
