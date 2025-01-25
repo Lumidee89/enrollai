@@ -26,7 +26,7 @@ exports.createSuperAdmin = async (req, res) => {
       email,
       password,
       accountType: "super_admin",
-
+      profilePicture: null,
       //
       isVerified: true,
     });
@@ -134,6 +134,41 @@ exports.getApplicationStats = async (req, res) => {
   }
 };
 
+exports.getAllAdmins = async (req, res) => {
+  try {
+    //  Fetch all admins
+    const admins = await User.find({ accountType: "super_admin" }).exec();
+
+    if (!admins || admins.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No admins found.",
+      });
+    }
+
+    admins.forEach((admin) => {
+      if (typeof admin.createdAt === "string") {
+        admin.createdAt = new Date(admin.createdAt);
+      }
+    });
+
+    // Sort admins by createdAt in descending order
+    admins.sort((a, b) => b.createdAt - a.createdAt);
+
+    res.status(200).json({
+      success: true,
+      data: admins,
+    });
+  } catch (error) {
+    console.error("Error fetching admins:  ", error.message);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching admins  ",
+      error: error.message,
+    });
+  }
+};
+
 exports.getAllProviders = async (req, res) => {
   try {
     //  Fetch all providers
@@ -147,6 +182,15 @@ exports.getAllProviders = async (req, res) => {
         message: "No providers found.",
       });
     }
+
+    providers.forEach((admin) => {
+      if (typeof admin.createdAt === "string") {
+        admin.createdAt = new Date(admin.createdAt);
+      }
+    });
+
+    // Sort providers by createdAt in descending order
+    providers.sort((a, b) => b.createdAt - a.createdAt);
 
     //   Extract provider IDs
     const providerIds = providers.map((provider) => provider._id);
@@ -188,6 +232,15 @@ exports.getAllOrganizations = async (req, res) => {
       accountType: "credentialing_organization",
     }).select("-password");
 
+    organizations.forEach((admin) => {
+      if (typeof admin.createdAt === "string") {
+        admin.createdAt = new Date(admin.createdAt);
+      }
+    });
+
+    // Sort organizations by createdAt in descending order
+    organizations.sort((a, b) => b.createdAt - a.createdAt);
+
     return res.status(200).json({
       success: true,
       data: organizations,
@@ -198,5 +251,48 @@ exports.getAllOrganizations = async (req, res) => {
       success: false,
       message: "Server error. Please try again later.",
     });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  const { fullName, profilePicture } = req.body;
+
+  const userId = req.user.id;
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) return res(404).json({ msg: "User not found" });
+
+    user.fullName = fullName || user.fullName;
+    user.profilePicture = profilePicture || user.profilePicture;
+
+    await user.save();
+
+    return res.status(200).json({ msg: "Profile updated successfully", user });
+  } catch (error) {
+    res.status(500).json({
+      msg: "Server error. Please try again later",
+      error: error.message,
+    });
+  }
+};
+
+exports.deleteAdminAccount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    res.status(200).json({ message: "User account deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user account:", error.message);
+    res.status(500).json({ message: "Server error" });
   }
 };

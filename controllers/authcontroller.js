@@ -219,15 +219,7 @@ exports.updateProfile = async (req, res) => {
     user.fullName = fullName || user.fullName;
     user.email = email || user.email;
     user.profilePicture = profilePicture || user.profilePicture;
-    // if (req.file) {
-    //   if (user.profilePicture) {
-    //     const oldPath = path.join(__dirname, '../uploads/profile-pictures', user.profilePicture);
-    //     if (fs.existsSync(oldPath)) {
-    //       fs.unlinkSync(oldPath);
-    //     }
-    //   }
-    //   user.profilePicture = req.file.filename;
-    // }
+
     user.profileStatus = 100;
     await user.save();
 

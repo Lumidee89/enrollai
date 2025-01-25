@@ -61,6 +61,7 @@ router.put(
   changeOrganizationPassword
 );
 router.delete("/delete", authenticateOrganization, deleteOrganization);
+
 router.get("/orgapplications", protect, getApplicationsByOrganization);
 router.get(
   "/incoming/:organizationApplicationId",
