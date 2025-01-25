@@ -120,9 +120,9 @@ const getApplicationsByStatusAndUserId = async (req, res) => {
     }
 
     // Fetch applications based on userId and status
-    const applications = await Application.find({ userId, status }).populate(
-      "userId organizationApplication"
-    );
+    const applications = await Application.find({ userId, status })
+      .populate("userId organizationApplication")
+      .sort({ createdAt: -1 });
 
     if (!applications || applications.length === 0) {
       return res
@@ -217,12 +217,13 @@ const deleteApplication = async (req, res) => {
     if (!deletedApplication) {
       return res.status(404).json({ message: "Application not found" });
     }
-    res.status(200).json({ message: "Application deleted successfully" });
+
     await logActivity(
-      user._id,
+      req.user._id,
       "delete-application",
       "User deleted an application successfully"
     );
+    res.status(200).json({ message: "Application deleted successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
