@@ -144,7 +144,7 @@ async function getApprovedProviders(req, res) {
 
     //   Return the users and their corresponding applications
     const response = users.map((user) => ({
-      user,
+      provider: user,
       applications: approvedApplications.filter(
         (app) => app.userId.toString() === user._id.toString()
       ),

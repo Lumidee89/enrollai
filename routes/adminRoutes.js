@@ -6,8 +6,8 @@ const {
   getAllProviders,
   createSuperAdmin,
   getApplicationStats,
+  getAllOrganizations,
 } = require("../controllers/adminController");
-const Organization = require("../models/Organization");
 
 router.get("/all", protect, authorize("super_admin"), getAllApplications);
 router.get(
@@ -23,24 +23,7 @@ router.get(
   "/credentialing-organizations",
   protect,
   authorize("super_admin"),
-  async (req, res) => {
-    try {
-      const organizations = await Organization.find({
-        accountType: "credentialing_organization",
-      }).select("-password");
-
-      return res.status(200).json({
-        success: true,
-        data: organizations,
-      });
-    } catch (error) {
-      console.error("Error fetching credentialing organizations:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Server error. Please try again later.",
-      });
-    }
-  }
+  getAllOrganizations
 );
 
 module.exports = router;

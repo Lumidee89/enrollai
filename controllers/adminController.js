@@ -1,36 +1,6 @@
 const Application = require("../models/applicationModel");
+const Organization = require("../models/Organization");
 const User = require("../models/User");
-
-exports.getAllApplications = async (req, res) => {
-  try {
-    const applications = await Application.find()
-      .populate("userId", "fullName email accountType")
-      .exec();
-
-    res.status(200).json({
-      success: true,
-      data: applications,
-    });
-  } catch (error) {
-    console.error("Error fetching applications:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch applications. Please try again later.",
-    });
-  }
-};
-
-exports.getAllProviders = async (req, res) => {
-  try {
-    const providers = await User.find({ accountType: "provider" }).select(
-      "-password"
-    );
-    res.status(200).json({ success: true, data: providers });
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-};
 
 exports.createSuperAdmin = async (req, res) => {
   try {
@@ -82,6 +52,25 @@ exports.createSuperAdmin = async (req, res) => {
   }
 };
 
+exports.getAllApplications = async (req, res) => {
+  try {
+    const applications = await Application.find()
+      .populate("userId", "fullName email accountType")
+      .exec();
+
+    res.status(200).json({
+      success: true,
+      data: applications,
+    });
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch applications. Please try again later.",
+    });
+  }
+};
+
 exports.getApplicationStats = async (req, res) => {
   try {
     // Aggregate applications by status and count them
@@ -114,6 +103,73 @@ exports.getApplicationStats = async (req, res) => {
       success: false,
       message: "Error fetching application statistics",
       error: error.message,
+    });
+  }
+};
+
+exports.getAllProviders = async (req, res) => {
+  try {
+    //  Fetch all providers
+    const providers = await User.find({ accountType: "provider" }).select(
+      "-password"
+    );
+
+    if (!providers || providers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No providers found.",
+      });
+    }
+
+    //   Extract provider IDs
+    const providerIds = providers.map((provider) => provider._id);
+
+    // Step 3: Fetch all applications for these providers
+    const applications = await Application.find({
+      userId: { $in: providerIds },
+    });
+
+    //   Combine provider data with their applications
+    const response = providers.map((provider) => ({
+      provider: provider,
+      applications: applications.filter(
+        (app) => app.userId.toString() === provider._id.toString()
+      ),
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: response,
+    });
+  } catch (error) {
+    console.error(
+      "Error fetching providers and their applications:",
+      error.message
+    );
+    res.status(500).json({
+      success: false,
+      message:
+        "An error occurred while fetching providers and their applications.",
+      error: error.message,
+    });
+  }
+};
+
+exports.getAllOrganizations = async (req, res) => {
+  try {
+    const organizations = await Organization.find({
+      accountType: "credentialing_organization",
+    }).select("-password");
+
+    return res.status(200).json({
+      success: true,
+      data: organizations,
+    });
+  } catch (error) {
+    console.error("Error fetching credentialing organizations:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
     });
   }
 };
