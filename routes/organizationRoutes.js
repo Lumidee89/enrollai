@@ -9,6 +9,10 @@ const {
   getAllOrganizations,
   getOrganizationDetailsByID,
   deleteOrganization,
+  verifyOrganizationOtp,
+  resendOrganizationOtp,
+  forgotOrganizationPassword,
+  resetOrganizationPassword,
 } = require("../controllers/organizationController");
 const { protect, authorize } = require("../middleware/authMiddleware");
 const {
@@ -22,7 +26,7 @@ const {
   declineApplication,
   getPendingApplicationsForOrganization,
   getApprovedApplicationsForOrganization,
-  getUserDetailsByBearerToken,
+
   fetchApplicationsByOrganization,
   getAllApplicationsForOrganization,
   getApprovedProviders,
@@ -33,8 +37,16 @@ const {
 } = require("../controllers/organizationController");
 const upload = require("../utils/multer");
 
+// Routes
+
+// Auth
 router.post("/register", registerOrganization);
 router.post("/login", loginOrganization);
+router.post("/verify-otp", verifyOrganizationOtp);
+router.get("/resend-otp/:workEmail", resendOrganizationOtp);
+router.post("/forgot-password", forgotOrganizationPassword);
+router.post("/reset-password", resetOrganizationPassword);
+
 router.post(
   "/application",
   protect,

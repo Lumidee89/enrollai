@@ -16,8 +16,11 @@ const OrganizationSchema = new mongoose.Schema({
   workEmail: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   profilePicture: { type: String },
+  otp: { type: String },
+  otpCreatedAt: { type: Date },
   profileStatus: { type: Number, default: 50 },
   createdAt: { type: Date, default: Date.now },
+  isVerified: { type: Boolean, default: false },
 });
 
 OrganizationSchema.pre("save", async function (next) {

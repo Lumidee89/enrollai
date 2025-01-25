@@ -1,6 +1,11 @@
 const Organization = require("../models/Organization");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const generateOtp = require("../utils/generateOTP");
+const emailTemplates = require("../utils/emailTemplate");
+const sendEmail = require("../utils/sendEmail");
+const { logActivity } = require("./activityController");
+require("dotenv").config();
 
 const registerOrganization = async (req, res) => {
   try {
@@ -13,10 +18,18 @@ const registerOrganization = async (req, res) => {
     } = req.body;
 
     const existingOrganization = await Organization.findOne({ workEmail });
+    const existingOrganizationName = await Organization.findOne({
+      organizationName,
+    });
     if (existingOrganization) {
       return res
         .status(400)
         .json({ message: "Organization with this email already exists" });
+    }
+    if (existingOrganizationName) {
+      return res
+        .status(400)
+        .json({ message: "Organization with this name already exists" });
     }
 
     const newOrganization = new Organization({
@@ -27,16 +40,24 @@ const registerOrganization = async (req, res) => {
       password,
     });
 
+    newOrganization.otp = generateOtp();
+    newOrganization.otpCreatedAt = new Date();
+
     await newOrganization.save();
 
-    const token = jwt.sign(
-      {
-        userId: newOrganization._id,
-        accountType: "credentialing_organization",
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    const emailSubject = "OTP Verification Code";
+    const emailText = emailTemplates.otpVerification(newOrganization.otp);
+
+    await sendEmail(newOrganization.workEmail, emailSubject, emailText);
+
+    // const token = jwt.sign(
+    //   {
+    //     userId: newOrganization._id,
+    //     accountType: "credentialing_organization",
+    //   },
+    //   process.env.JWT_SECRET,
+    //   { expiresIn: "1d" }
+    // );
 
     res.status(201).json({
       message: "Organization registered successfully",
@@ -55,6 +76,43 @@ const registerOrganization = async (req, res) => {
   }
 };
 
+const verifyOrganizationOtp = async (req, res) => {
+  const { workEmail, otp } = req.body;
+
+  console.log(otp);
+
+  try {
+    const organization = await Organization.findOne({ workEmail });
+
+    if (!organization) {
+      return res.status(400).json({ msg: "Organization not found" });
+    }
+
+    const otpExpiryDuration = 15 * 60 * 1000;
+    const currentTime = Date.now();
+
+    if (
+      currentTime - new Date(organization.otpCreatedAt).getTime() >
+      otpExpiryDuration
+    ) {
+      return res.status(400).json({ msg: "OTP has expired" });
+    }
+
+    if (organization.otp !== otp) {
+      return res.status(400).json({ msg: "Invalid OTP" });
+    }
+
+    organization.isVerified = true;
+    organization.otp = undefined;
+    organization.otpCreatedAt = undefined;
+    await organization.save();
+
+    res.status(200).json({ msg: "OTP verified, account activated" });
+  } catch (error) {
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
 const loginOrganization = async (req, res) => {
   try {
     const { workEmail, password } = req.body;
@@ -66,9 +124,21 @@ const loginOrganization = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
+
+    console.log(organization);
+
+    if (!organization.isVerified)
+      return res
+        .status(400)
+        .json({ msg: "Account not verified. Please verify your email." });
+
     const token = jwt.sign(
       { userId: organization._id, accountType: "credentialing_organization" },
-      process.env.JWT_SECRET);
+      process.env.JWT_SECRET
+    );
+
+    await logActivity(organization._id, "login", "User logged in successfully");
+
     res.status(200).json({
       message: "Login successful",
       token,
@@ -83,6 +153,75 @@ const loginOrganization = async (req, res) => {
   } catch (error) {
     console.error("Error logging in organization:", error.message);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+const forgotOrganizationPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const organization = await Organization.findOne({ email });
+    if (!organization)
+      return res.status(400).json({ msg: "Organization not found" });
+
+    organization.otp = generateOtp();
+    organization.otpCreatedAt = new Date();
+
+    await organization.save();
+
+    const emailSubject = "Password Reset OTP";
+    const emailText = emailTemplates.otpVerification(organization.otp);
+
+    await sendEmail(organization.workEmail, emailSubject, emailText);
+
+    res.status(200).json({ msg: "OTP sent to your email" });
+  } catch (error) {
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+const resetOrganizationPassword = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+
+  try {
+    const organization = await Organization.findOne({ email });
+
+    organization.password = newPassword;
+    organization.otp = undefined;
+    await organization.save();
+
+    res.status(200).json({ msg: "Password reset successful" });
+  } catch (error) {
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+const resendOrganizationOtp = async (req, res) => {
+  const { workEmail } = req.params;
+
+  try {
+    const organization = await Organization.findOne({ workEmail });
+    if (!organization)
+      return res.status(400).json({ msg: "Organization not found" });
+
+    if (!organization.isVerified) {
+      organization.otp = generateOtp();
+      organization.otpCreatedAt = new Date();
+      await organization.save();
+
+      const emailSubject = "OTP Verification Code";
+      const emailText = emailTemplates.otpVerification(organization.otp);
+
+      await sendEmail(organization.workEmail, emailSubject, emailText);
+
+      console.log(organization);
+      res.status(200).json({ msg: "New OTP sent to your email" });
+    } else {
+      res.status(400).json({ msg: "Account is already verified" });
+    }
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({ msg: "Server error", error: error.message });
   }
 };
 
@@ -292,6 +431,10 @@ const deleteOrganization = async (req, res) => {
 
 module.exports = {
   authenticateOrganization,
+  verifyOrganizationOtp,
+  forgotOrganizationPassword,
+  resendOrganizationOtp,
+  resetOrganizationPassword,
   registerOrganization,
   loginOrganization,
   registerOrganization,
