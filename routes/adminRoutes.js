@@ -7,9 +7,23 @@ const {
   createSuperAdmin,
   getApplicationStats,
   getAllOrganizations,
+  getAllApplicationsBasedOnStatus,
 } = require("../controllers/adminController");
 
-router.get("/all", protect, authorize("super_admin"), getAllApplications);
+router.get(
+  "/applications/all",
+  protect,
+  authorize("super_admin"),
+  getAllApplications
+);
+
+router.get(
+  "/applications-status",
+  protect,
+  authorize("super_admin"),
+  getAllApplicationsBasedOnStatus
+);
+
 router.get(
   "/application-stats",
   protect,

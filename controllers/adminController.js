@@ -55,12 +55,39 @@ exports.createSuperAdmin = async (req, res) => {
 exports.getAllApplications = async (req, res) => {
   try {
     const applications = await Application.find()
-      .populate("userId", "fullName email accountType")
+      .populate("userId", "fullName email organizationApplication")
+      .sort({ createdAt: -1 })
       .exec();
 
     res.status(200).json({
       success: true,
-      data: applications,
+      allApplications: applications,
+    });
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch applications. Please try again later.",
+    });
+  }
+};
+
+exports.getAllApplicationsBasedOnStatus = async (req, res) => {
+  try {
+    const { status } = req.query;
+
+    if (!["pending", "approved", "declined"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    const applications = await Application.find({ status })
+      .populate("userId", "fullName email  organizationApplication")
+      .sort({ createdAt: -1 })
+      .exec();
+
+    res.status(200).json({
+      success: true,
+      applications,
     });
   } catch (error) {
     console.error("Error fetching applications:", error);

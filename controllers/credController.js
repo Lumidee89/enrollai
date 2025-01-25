@@ -56,7 +56,7 @@ async function getPendingApplicationsForOrganization(organization_name) {
       return { success: false, message: "No pending applications found." };
     }
 
-    return { success: true, pendingApplications };
+    return { success: true, applications: pendingApplications };
   } catch (error) {
     console.error("Error fetching pending applications:", error.message);
     return { success: false, message: error.message };
