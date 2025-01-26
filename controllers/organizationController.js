@@ -285,9 +285,10 @@ const getAllOrganizations = async (req, res) => {
     const organizations = await Organization.find().select("-password");
 
     if (!organizations || organizations.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No organizations found",
+      res.status(200).json({
+        success: true,
+        count: 0,
+        organizations: [],
       });
     }
 

@@ -8,7 +8,6 @@ const {
   changeOrganizationPassword,
   getAllOrganizations,
   getOrganizationDetailsByID,
-  deleteOrganization,
   verifyOrganizationOtp,
   resendOrganizationOtp,
   forgotOrganizationPassword,
@@ -18,9 +17,10 @@ const {
 const { protect, authorize } = require("../middleware/authMiddleware");
 const {
   createApplication,
-  getApplications,
-  getApplicationsByOrganization,
-  deleteApplication,
+  getCreatedApplicationsByOrganization,
+  deleteOrganizationCreatedApplications,
+  getPostedApplicationsForProviders,
+  toggleApplicationStatus,
 } = require("../controllers/credentialingApplication");
 const {
   approveApplication,
@@ -50,6 +50,8 @@ router.post("/reset-password", resetOrganizationPassword);
 
 // Applications
 
+// Creadentialing Organization Applications
+
 // Create Application for Providers to fill
 router.post(
   "/create-application",
@@ -59,13 +61,41 @@ router.post(
 );
 
 // Get Applications created for Providers (FE: Organization Route)
-router.get("/created-applications", protect, getApplicationsByOrganization);
+router.get(
+  "/created-applications",
+  protect,
+  getCreatedApplicationsByOrganization
+);
 
 // Get Applications created by organizations for Providers to fill (FE: Provider Route)
-router.get("/get-organization-applications", protect, getApplications);
+router.get(
+  "/get-organization-applications",
+  protect,
+  getPostedApplicationsForProviders
+);
+
+// Toggle the Created Application Status (FE: Organization Route)
+router.put(
+  "/toggle-organization-application-status/:id",
+  protect,
+  toggleApplicationStatus
+);
+
+// Delete Applications created by organizations for Providers
+router.delete(
+  "/delete/:id",
+  authenticateOrganization,
+  deleteOrganizationCreatedApplications
+);
 
 // Get All Returned Filled Applications (FE: Organization Route)
 router.get("/applications", getAllApplicationsForOrganization);
+
+// Get All Incoming Applications (FE: Organization Route)
+router.get(
+  "/incoming/:organizationApplicationId",
+  fetchApplicationsByOrganization
+);
 
 router.get("/getApplications/all", protect, getAllOrganizations);
 router.get("/details", authenticateOrganization, getOrganizationDetails);
@@ -85,13 +115,8 @@ router.put(
   authenticateOrganization,
   changeOrganizationPassword
 );
-router.delete("/delete", authenticateOrganization, deleteOrganization);
 
-router.get(
-  "/incoming/:organizationApplicationId",
-  fetchApplicationsByOrganization
-);
-router.delete("/:id", protect, authorize("organization"), deleteApplication);
+// router.delete("/:id", protect, authorize("organization"), deleteApplication);
 
 router.put("/approve/:applicationId", async (req, res) => {
   const { applicationId } = req.params;

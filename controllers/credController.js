@@ -12,9 +12,9 @@ async function approveApplication(applicationId) {
       { new: true }
     );
 
-    if (!application) {
-      return { success: false, message: "Application not found." };
-    }
+    // if (!application) {
+    //   return { success: false, message: "Application not found." };
+    // }
 
     return {
       success: true,
@@ -34,9 +34,9 @@ async function declineApplication(applicationId) {
       { new: true }
     );
 
-    if (!application) {
-      return { success: false, message: "Application not found." };
-    }
+    // if (!application) {
+    //   return { success: false, message: "Application not found." };
+    // }
 
     return { success: true, message: "Application declined.", application };
   } catch (error) {
@@ -52,9 +52,9 @@ async function getPendingApplicationsForOrganization(organization_name) {
       status: "pending",
     });
 
-    if (!pendingApplications || pendingApplications.length === 0) {
-      return { success: false, message: "No pending applications found." };
-    }
+    // if (!pendingApplications || pendingApplications.length === 0) {
+    //   return { success: false, message: "No pending applications found." };
+    // }
 
     return { success: true, applications: pendingApplications };
   } catch (error) {
@@ -72,12 +72,12 @@ async function getApprovedApplicationsForOrganization(req, res) {
       status: "approved",
     });
 
-    if (!approvedApplications || approvedApplications.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No approved applications found for this organization.",
-      });
-    }
+    // if (!approvedApplications || approvedApplications.length === 0) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "No approved applications found for this organization.",
+    //   });
+    // }
 
     res.status(200).json({
       success: true,
@@ -106,12 +106,12 @@ async function getAllApplicationsForOrganization(req, res) {
       organizationName: organization_name,
     });
 
-    if (!allAppllications || allAppllications.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No applications found for this organization.",
-      });
-    }
+    // if (!allAppllications || allAppllications.length === 0) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "No applications found for this organization.",
+    //   });
+    // }
 
     return res.status(200).json({ success: true, allAppllications });
   } catch (error) {
@@ -143,12 +143,12 @@ async function getApprovedProviders(req, res) {
     //   Fetch user details using the userIds
     const users = await User.find({ _id: { $in: userIds } });
 
-    if (!users || users.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No users found for the approved applications.",
-      });
-    }
+    // if (!users || users.length === 0) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "No users found for the approved applications.",
+    //   });
+    // }
 
     //   Return the users and their corresponding applications
     const response = users.map((user) => ({
@@ -254,11 +254,11 @@ const fetchApplicationsByOrganization = async (req, res) => {
       organizationApplication: organizationApplicationId,
     }).populate("userId", "firstName lastName email");
 
-    if (applications.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No applications found for this organization" });
-    }
+    // if (applications.length === 0) {
+    //   return res
+    //     .status(404)
+    //     .json({ message: "No applications found for this organization" });
+    // }
 
     res.status(200).json({
       message: "Applications fetched successfully",

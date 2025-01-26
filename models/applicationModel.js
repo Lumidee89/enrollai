@@ -19,6 +19,10 @@ const applicationSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    organizationId: {
+      type: String,
+      required: true,
+    },
     step1: {
       personalInformation: {
         lastName: { type: String, required: true },

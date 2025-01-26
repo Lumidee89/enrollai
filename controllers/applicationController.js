@@ -16,6 +16,7 @@ const createApplication = async (req, res) => {
       organizationApplicationId,
       applicationTitle,
       organizationName,
+      organizationId,
     } = req.body;
     const userId = req.user._id;
 
@@ -50,6 +51,7 @@ const createApplication = async (req, res) => {
       step2,
       step3,
       organizationApplication: organizationApplicationId,
+      organizationId,
     });
 
     await newApplication.save();
@@ -76,9 +78,9 @@ const getApplicationById = async (req, res) => {
     const application = await Application.findById(applicationId).populate(
       "userId"
     );
-    if (!application) {
-      return res.status(404).json({ message: "Application not found" });
-    }
+    // if (!application) {
+    //   return res.status(404).json({ message: "Application not found" });
+    // }
     res.status(200).json({ application });
   } catch (error) {
     console.error(error);
@@ -95,11 +97,11 @@ const getMostRecentApplication = async (req, res) => {
       .sort({ createdAt: -1 })
       .exec();
 
-    if (!recentApplication) {
-      return res
-        .status(404)
-        .json({ message: "No applications found for the user" });
-    }
+    // if (!recentApplication) {
+    //   return res
+    //     .status(404)
+    //     .json({ message: "No applications found for the user" });
+    // }
 
     res.status(200).json({
       message: "Most recent application retrieved successfully",
@@ -125,11 +127,11 @@ const getApplicationsByStatusAndUserId = async (req, res) => {
       .populate("userId organizationApplication")
       .sort({ createdAt: -1 });
 
-    if (!applications || applications.length === 0) {
-      return res
-        .status(404)
-        .json({ message: `No applications found with status: ${status}` });
-    }
+    // if (!applications || applications.length === 0) {
+    //   return res
+    //     .status(404)
+    //     .json({ message: `No applications found with status: ${status}` });
+    // }
 
     res.status(200).json({ applications });
   } catch (error) {
@@ -144,11 +146,11 @@ const getApplicationsByUserId = async (req, res) => {
     const applications = await Application.find({ userId }).populate(
       "userId organizationApplication"
     );
-    if (!applications || applications.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No applications found for this user" });
-    }
+    // if (!applications || applications.length === 0) {
+    //   return res
+    //     .status(404)
+    //     .json({ message: "No applications found for this user" });
+    // }
     res.status(200).json({ applications });
   } catch (error) {
     console.error(error);
@@ -212,9 +214,9 @@ const updateApplication = async (req, res) => {
 const getAllApplications = async (req, res) => {
   try {
     const applications = await Application.find().populate("userId");
-    if (!applications || applications.length === 0) {
-      return res.status(404).json({ message: "No applications found" });
-    }
+    // if (!applications || applications.length === 0) {
+    //   return res.status(404).json({ message: "No applications found" });
+    // }
     res.status(200).json({ applications });
   } catch (error) {
     console.error(error);
