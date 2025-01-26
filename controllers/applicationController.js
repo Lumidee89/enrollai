@@ -115,6 +115,14 @@ const getMostRecentApplication = async (req, res) => {
 
 const getApplicationsByStatusAndUserId = async (req, res) => {
   try {
+    // Extract query parameters for pagination
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 10;
+    const order_by = req.query.order_by || "desc";
+
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * size;
+
     const { userId } = req.params;
     const { status } = req.query;
 
@@ -125,15 +133,27 @@ const getApplicationsByStatusAndUserId = async (req, res) => {
     // Fetch applications based on userId and status
     const applications = await Application.find({ userId, status })
       .populate("userId organizationApplication")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: order_by === "asc" ? 1 : -1 })
+      .skip(skip)
+      .limit(size);
 
-    // if (!applications || applications.length === 0) {
-    //   return res
-    //     .status(404)
-    //     .json({ message: `No applications found with status: ${status}` });
-    // }
+    // Get the total number of applications (for pagination metadata)
+    const totalApplications = await OrgApplication.countDocuments();
 
-    res.status(200).json({ applications });
+    // Calculate total pages
+    const totalPages = Math.ceil(totalApplications / size);
+
+    // Return the response with pagination metadata
+    res.status(200).json({
+      success: true,
+      applications,
+      pagination: {
+        page,
+        size,
+        totalApplications,
+        totalPages,
+      },
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -146,11 +166,7 @@ const getApplicationsByUserId = async (req, res) => {
     const applications = await Application.find({ userId }).populate(
       "userId organizationApplication"
     );
-    // if (!applications || applications.length === 0) {
-    //   return res
-    //     .status(404)
-    //     .json({ message: "No applications found for this user" });
-    // }
+
     res.status(200).json({ applications });
   } catch (error) {
     console.error(error);

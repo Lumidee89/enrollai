@@ -39,7 +39,16 @@ const createApplication = async (req, res) => {
 // Get Applications created for Providers (FE: Organization Route)
 const getCreatedApplicationsByOrganization = async (req, res) => {
   try {
+    // Extract query parameters for pagination
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 5;
+    const order_by = req.query.order_by || "desc";
+
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * size;
+
     const organizationId = req.user._id;
+
     const applications = await OrgApplication.find({
       organization: organizationId,
     })
@@ -47,9 +56,27 @@ const getCreatedApplicationsByOrganization = async (req, res) => {
         "organization",
         "organizationName administratorFullName workEmail"
       )
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: order_by === "asc" ? 1 : -1 })
+      .skip(skip)
+      .limit(size);
 
-    res.status(200).json({ applications });
+    // Get the total number of applications (for pagination metadata)
+    const totalApplications = await OrgApplication.countDocuments();
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalApplications / size);
+
+    // Return the response with pagination metadata
+    res.status(200).json({
+      success: true,
+      applications,
+      pagination: {
+        page,
+        size,
+        totalApplications,
+        totalPages,
+      },
+    });
   } catch (error) {
     console.error(
       "Error fetching applications for organization:",
