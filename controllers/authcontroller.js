@@ -273,3 +273,31 @@ exports.deleteUserAccount = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.clearAllUsers = async (req, res) => {
+  try {
+    // Delete all user from the database
+    const result = await User.deleteMany({});
+
+    // Check if any user were deleted
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No user found to delete.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "All user have been deleted successfully.",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error clearing user:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while clearing user.",
+      error: error.message,
+    });
+  }
+};

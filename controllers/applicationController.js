@@ -1,4 +1,5 @@
 const Application = require("../models/applicationModel");
+const OrgApplication = require("../models/credentialingApplication");
 const User = require("../models/User");
 const OrganizationApplication = require("../models/credentialingApplication");
 const { logActivity } = require("../controllers/activityController");
@@ -208,28 +209,6 @@ const updateApplication = async (req, res) => {
   }
 };
 
-const deleteApplication = async (req, res) => {
-  try {
-    const { applicationId } = req.params;
-    const deletedApplication = await Application.findByIdAndDelete(
-      applicationId
-    );
-    if (!deletedApplication) {
-      return res.status(404).json({ message: "Application not found" });
-    }
-
-    await logActivity(
-      req.user._id,
-      "delete-application",
-      "User deleted an application successfully"
-    );
-    res.status(200).json({ message: "Application deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
 const getAllApplications = async (req, res) => {
   try {
     const applications = await Application.find().populate("userId");
@@ -268,6 +247,58 @@ const updateApplicationStatus = async (req, res) => {
   }
 };
 
+const deleteApplication = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const deletedApplication = await Application.findByIdAndDelete(
+      applicationId
+    );
+    if (!deletedApplication) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    await logActivity(
+      req.user._id,
+      "delete-application",
+      "User deleted an application successfully"
+    );
+    res.status(200).json({ message: "Application deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const clearAllApplications = async (req, res) => {
+  try {
+    // Delete all Applications from the database
+    const result = await Application.deleteMany({});
+
+    const orgresult = await OrgApplication.deleteMany({});
+
+    // Check if any Applications were deleted
+    if (result.deletedCount === 0 && orgresult.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No Applications found to delete.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "All Applications have been deleted successfully.",
+      deletedCount: result.deletedCount + orgresult.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error clearing Applications:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while clearing Applications.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createApplication,
   getApplicationById,
@@ -279,4 +310,5 @@ module.exports = {
   getApplicationStatsByUserId,
   getApplicationsByStatusAndUserId,
   getMostRecentApplication,
+  clearAllApplications,
 };

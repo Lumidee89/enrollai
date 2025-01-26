@@ -50,25 +50,8 @@ const registerOrganization = async (req, res) => {
 
     await sendEmail(newOrganization.workEmail, emailSubject, emailText);
 
-    // const token = jwt.sign(
-    //   {
-    //     userId: newOrganization._id,
-    //     accountType: "credentialing_organization",
-    //   },
-    //   process.env.JWT_SECRET,
-    //   { expiresIn: "1d" }
-    // );
-
     res.status(201).json({
       message: "Organization registered successfully",
-      token,
-      organization: {
-        id: newOrganization._id,
-        organizationName: newOrganization.organizationName,
-        administratorFullName: newOrganization.administratorFullName,
-        workEmail: newOrganization.workEmail,
-        profileStatus: newOrganization.profileStatus,
-      },
     });
   } catch (error) {
     console.error("Error registering organization:", error.message);
@@ -78,8 +61,6 @@ const registerOrganization = async (req, res) => {
 
 const verifyOrganizationOtp = async (req, res) => {
   const { workEmail, otp } = req.body;
-
-  console.log(otp);
 
   try {
     const organization = await Organization.findOne({ workEmail });
@@ -133,9 +114,11 @@ const loginOrganization = async (req, res) => {
         .json({ msg: "Account not verified. Please verify your email." });
 
     const token = jwt.sign(
-      { userId: organization._id, accountType: "credentialing_organization" },
+      { userId: organization._id, accountType: "organization" },
       process.env.JWT_SECRET
     );
+
+    console.log(token);
 
     await logActivity(organization._id, "login", "User logged in successfully");
 
@@ -147,6 +130,7 @@ const loginOrganization = async (req, res) => {
         organizationName: organization.organizationName,
         administratorFullName: organization.administratorFullName,
         workEmail: organization.workEmail,
+        accountType: "organization",
         ...organization._doc,
       },
     });
@@ -364,16 +348,16 @@ const updateOrganizationDetails = async (req, res) => {
       return res.status(404).json({ message: "Organization not found" });
     }
 
+    await logActivity(
+      req.organizationId,
+      "update profile",
+      "User update profile successfully"
+    );
+
     res.status(200).json({
       success: true,
       message: "Organization details updated successfully",
-      organization: {
-        id: updatedOrganization._id,
-        organizationName: updatedOrganization.organizationName,
-        administratorFullName: updatedOrganization.administratorFullName,
-        workEmail: updatedOrganization.workEmail,
-        profilePicture: updatedOrganization.profilePicture,
-      },
+      organization: updatedOrganization,
     });
   } catch (error) {
     console.error("Error updating organization details:", error.message);
@@ -429,6 +413,34 @@ const deleteOrganization = async (req, res) => {
   }
 };
 
+const clearAllOrganizations = async (req, res) => {
+  try {
+    // Delete all organizations from the database
+    const result = await Organization.deleteMany({});
+
+    // Check if any organizations were deleted
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No organizations found to delete.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "All organizations have been deleted successfully.",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error clearing organizations:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while clearing organizations.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   authenticateOrganization,
   verifyOrganizationOtp,
@@ -445,4 +457,5 @@ module.exports = {
   getAllOrganizations,
   getOrganizationDetailsByID,
   deleteOrganization,
+  clearAllOrganizations,
 };

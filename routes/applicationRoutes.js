@@ -42,14 +42,20 @@ router.delete(
 router.get(
   "/credentialing",
   protect,
-  authorize("credentialing_organization"),
+  authorize("organization"),
   applicationController.getAllApplications
 );
 router.put(
   "/status/:applicationId",
   protect,
-  authorize("credentialing_organization"),
+  authorize("organization"),
   applicationController.updateApplicationStatus
+);
+
+router.delete(
+  "/delete/all",
+  // protect,
+  applicationController.clearAllApplications
 );
 
 module.exports = router;

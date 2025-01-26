@@ -13,6 +13,7 @@ const {
   resendOrganizationOtp,
   forgotOrganizationPassword,
   resetOrganizationPassword,
+  clearAllOrganizations,
 } = require("../controllers/organizationController");
 const { protect, authorize } = require("../middleware/authMiddleware");
 const {
@@ -47,13 +48,25 @@ router.get("/resend-otp/:workEmail", resendOrganizationOtp);
 router.post("/forgot-password", forgotOrganizationPassword);
 router.post("/reset-password", resetOrganizationPassword);
 
+// Applications
+
+// Create Application for Providers to fill
 router.post(
-  "/application",
+  "/create-application",
   protect,
-  authorize("credentialing_organization"),
+  authorize("organization"),
   createApplication
 );
-router.get("/getApplications", protect, getApplications);
+
+// Get Applications created for Providers (FE: Organization Route)
+router.get("/created-applications", protect, getApplicationsByOrganization);
+
+// Get Applications created by organizations for Providers to fill (FE: Provider Route)
+router.get("/get-organization-applications", protect, getApplications);
+
+// Get All Returned Filled Applications (FE: Organization Route)
+router.get("/applications", getAllApplicationsForOrganization);
+
 router.get("/getApplications/all", protect, getAllOrganizations);
 router.get("/details", authenticateOrganization, getOrganizationDetails);
 router.get(
@@ -74,42 +87,11 @@ router.put(
 );
 router.delete("/delete", authenticateOrganization, deleteOrganization);
 
-router.get("/orgapplications", protect, getApplicationsByOrganization);
 router.get(
   "/incoming/:organizationApplicationId",
   fetchApplicationsByOrganization
 );
-router.delete(
-  "/:id",
-  protect,
-  authorize("credentialing_organization"),
-  deleteApplication
-);
-
-router.get("/applications", async (req, res) => {
-  try {
-    const { organization_name } = req.query;
-
-    if (!organization_name) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Organization is required" });
-    }
-
-    const result = await getAllApplicationsForOrganization(organization_name);
-
-    if (result.success) {
-      return res.status(200).json(result);
-    } else {
-      return res
-        .status(404)
-        .json({ success: false, message: "No applications found" });
-    }
-  } catch (error) {
-    console.error("Error fetching all applications:", error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-});
+router.delete("/:id", protect, authorize("organization"), deleteApplication);
 
 router.put("/approve/:applicationId", async (req, res) => {
   const { applicationId } = req.params;
@@ -192,6 +174,13 @@ router.get("/get-providers/:organizationId", getApprovedProviders);
 router.get(
   "/approved-applications/:organizationId",
   getApprovedApplicationsForOrganization
+);
+
+router.delete(
+  "/delete/all",
+  // protect,
+  // authorize("organization"),
+  clearAllOrganizations
 );
 
 module.exports = router;

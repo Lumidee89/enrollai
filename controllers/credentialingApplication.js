@@ -1,7 +1,8 @@
 const Application = require("../models/credentialingApplication");
-const Organization = require("../models/Organization");
+
 const { logActivity } = require("../controllers/activityController");
 
+//  Create Application (FE: Organization Route)
 const createApplication = async (req, res) => {
   try {
     const { applicationName, applicationTitle } = req.body;
@@ -13,9 +14,11 @@ const createApplication = async (req, res) => {
     const organizationId = req.user._id;
     const application = new Application({
       organization: organizationId,
+      organizationId,
       applicationName,
       applicationTitle,
     });
+
     await application.save();
     res.status(201).json({
       message: "Application created successfully",
@@ -32,18 +35,47 @@ const createApplication = async (req, res) => {
   }
 };
 
+// Get Applications created by organizations for Providers to fill (FE: Provider Route)
 const getApplications = async (req, res) => {
   try {
+    // Extract query parameters for pagination
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 5;
+    const order_by = req.query.order_by || "desc";
+
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * size;
+
+    // Fetch applications with pagination and sorting
     const applications = await Application.find()
       .populate(
         "organization",
         "organizationName administratorFullName workEmail"
       )
-      .sort({ createdAt: -1 });
-    res.status(200).json({ applications });
+      .sort({ createdAt: order_by === "asc" ? 1 : -1 })
+      .skip(skip)
+      .limit(size);
+
+    // Get the total number of applications (for pagination metadata)
+    const totalApplications = await Application.countDocuments();
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalApplications / size);
+
+    // Return the response with pagination metadata
+    res.status(200).json({
+      success: true,
+      applications,
+      pagination: {
+        page,
+        size,
+        totalApplications,
+        totalPages,
+      },
+    });
   } catch (error) {
     console.error("Error fetching applications:", error.message);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 

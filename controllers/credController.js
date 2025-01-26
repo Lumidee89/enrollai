@@ -1,7 +1,7 @@
 const Application = require("../models/applicationModel");
 const OrganizationApplication = require("../models/credentialingApplication");
 const User = require("../models/User");
-const { logActivity } = require("../controllers/activityController");
+
 const jwt = require("jsonwebtoken");
 
 async function approveApplication(applicationId) {
@@ -92,8 +92,16 @@ async function getApprovedApplicationsForOrganization(req, res) {
   }
 }
 
-async function getAllApplicationsForOrganization(organization_name) {
+async function getAllApplicationsForOrganization(req, res) {
   try {
+    const { organization_name } = req.query;
+
+    if (!organization_name) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Organization is required" });
+    }
+
     const allAppllications = await Application.find({
       organizationName: organization_name,
     });
@@ -105,7 +113,7 @@ async function getAllApplicationsForOrganization(organization_name) {
       });
     }
 
-    return { success: true, allAppllications };
+    return res.status(200).json({ success: true, allAppllications });
   } catch (error) {
     console.error("Error fetching all applications:", error.message);
     return { success: false, message: error.message };

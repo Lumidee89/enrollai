@@ -16,7 +16,7 @@ const protect = async (req, res, next) => {
       // console.log("Decoded Token:", decoded);
 
       switch (decoded.accountType) {
-        case "credentialing_organization":
+        case "organization":
           req.user = await Organization.findById(decoded.userId).select(
             "-password"
           );

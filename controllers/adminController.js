@@ -230,7 +230,7 @@ exports.getAllProviders = async (req, res) => {
 exports.getAllOrganizations = async (req, res) => {
   try {
     const organizations = await Organization.find({
-      accountType: "credentialing_organization",
+      accountType: "organization",
     }).select("-password");
 
     organizations.forEach((admin) => {

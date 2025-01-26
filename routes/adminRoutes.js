@@ -8,7 +8,6 @@ const {
   getApplicationStats,
   getAllOrganizations,
   getAllApplicationsBasedOnStatus,
-
   getAllAdmins,
   deleteAdminAccount,
 } = require("../controllers/adminController");
