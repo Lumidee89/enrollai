@@ -106,8 +106,6 @@ const loginOrganization = async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    console.log(organization);
-
     if (!organization.isVerified)
       return res
         .status(400)
@@ -117,8 +115,6 @@ const loginOrganization = async (req, res) => {
       { userId: organization._id, accountType: "organization" },
       process.env.JWT_SECRET
     );
-
-    console.log(token);
 
     await logActivity(organization._id, "login", "User logged in successfully");
 
