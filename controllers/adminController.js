@@ -53,42 +53,62 @@ exports.createSuperAdmin = async (req, res) => {
   }
 };
 
-exports.getAllApplications = async (req, res) => {
-  try {
-    const applications = await Application.find()
-      .populate("userId", "fullName email organizationApplication")
-      .sort({ createdAt: -1 })
-      .exec();
-
-    res.status(200).json({
-      success: true,
-      allApplications: applications,
-    });
-  } catch (error) {
-    console.error("Error fetching applications:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch applications. Please try again later.",
-    });
-  }
-};
-
 exports.getAllApplicationsBasedOnStatus = async (req, res) => {
   try {
+    // Extract query parameters for pagination
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 5;
+    const order_by = req.query.order_by || "desc";
+
     const { status } = req.query;
 
-    if (!["pending", "approved", "declined"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status value" });
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * size;
+
+    let applications;
+
+    let totalApplications;
+
+    if (status === "all") {
+      applications = await Application.find()
+        .populate("userId", "fullName email organizationApplication")
+        .sort({ createdAt: order_by === "asc" ? 1 : -1 })
+        .skip(skip)
+        .limit(size);
+
+      // Get the total number of applications (for pagination metadata)
+      totalApplications = await Application.countDocuments();
+    } else {
+      if (!["pending", "approved", "declined"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+
+      applications = await Application.find({
+        status,
+      })
+        .sort({ createdAt: order_by === "asc" ? 1 : -1 })
+        .skip(skip)
+        .limit(size);
+
+      // Get the total number of applications (for pagination metadata)
+      totalApplications = await Application.countDocuments({
+        status,
+      });
     }
 
-    const applications = await Application.find({ status })
-      .populate("userId", "fullName email  organizationApplication")
-      .sort({ createdAt: -1 })
-      .exec();
+    // Calculate total pages
+    const totalPages = Math.ceil(totalApplications / size);
 
+    // Return the response with pagination metadata
     res.status(200).json({
       success: true,
       applications,
+      pagination: {
+        page,
+        size,
+        totalApplications,
+        totalPages,
+      },
     });
   } catch (error) {
     console.error("Error fetching applications:", error);
@@ -137,15 +157,20 @@ exports.getApplicationStats = async (req, res) => {
 
 exports.getAllAdmins = async (req, res) => {
   try {
-    //  Fetch all admins
-    const admins = await User.find({ accountType: "super_admin" }).exec();
+    // Extract query parameters for pagination
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 5;
+    const order_by = req.query.order_by || "desc";
 
-    if (!admins || admins.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No admins found.",
-      });
-    }
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * size;
+
+    //  Fetch all admins
+    const admins = await User.find({ accountType: "super_admin" })
+      .select("-password")
+      .sort({ createdAt: order_by === "asc" ? 1 : -1 })
+      .skip(skip)
+      .limit(size);
 
     admins.forEach((admin) => {
       if (typeof admin.createdAt === "string") {
@@ -156,9 +181,24 @@ exports.getAllAdmins = async (req, res) => {
     // Sort admins by createdAt in descending order
     admins.sort((a, b) => b.createdAt - a.createdAt);
 
+    // Get the total number of Users (for pagination metadata)
+    const totalUsers = await User.countDocuments({
+      accountType: "super_admin",
+    });
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalUsers / size);
+
+    // Return the response with pagination metadata
     res.status(200).json({
       success: true,
       data: admins,
+      pagination: {
+        page,
+        size,
+        totalUsers,
+        totalPages,
+      },
     });
   } catch (error) {
     console.error("Error fetching admins:  ", error.message);
@@ -172,17 +212,19 @@ exports.getAllAdmins = async (req, res) => {
 
 exports.getAllProviders = async (req, res) => {
   try {
-    //  Fetch all providers
-    const providers = await User.find({ accountType: "provider" }).select(
-      "-password"
-    );
+    // Extract query parameters for pagination
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 5;
+    const order_by = req.query.order_by || "desc";
 
-    if (!providers || providers.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No providers found.",
-      });
-    }
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * size;
+    //  Fetch all providers
+    const providers = await User.find({ accountType: "provider" })
+      .select("-password")
+      .sort({ createdAt: order_by === "asc" ? 1 : -1 })
+      .skip(skip)
+      .limit(size);
 
     providers.forEach((admin) => {
       if (typeof admin.createdAt === "string") {
@@ -209,9 +251,24 @@ exports.getAllProviders = async (req, res) => {
       ),
     }));
 
+    // Get the total number of Users (for pagination metadata)
+    const totalUsers = await User.countDocuments({
+      accountType: "provider",
+    });
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalUsers / size);
+
+    // Return the response with pagination metadata
     res.status(200).json({
       success: true,
       data: response,
+      pagination: {
+        page,
+        size,
+        totalUsers,
+        totalPages,
+      },
     });
   } catch (error) {
     console.error(

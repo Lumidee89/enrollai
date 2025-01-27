@@ -1,188 +1,90 @@
 const Application = require("../models/applicationModel");
-const OrganizationApplication = require("../models/credentialingApplication");
 const User = require("../models/User");
-
 const jwt = require("jsonwebtoken");
 
-async function approveApplication(applicationId) {
+// Get (All, Imcoming, Declined & Approved) Applications from Providers Based on their Status (FE: Organization Route)
+async function getApplicationsFromProvidersBaseonStatus(req, res) {
   try {
-    const application = await Application.findByIdAndUpdate(
-      applicationId,
-      { status: "approved" },
-      { new: true }
-    );
+    // Extract query parameters for pagination
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 10;
+    const order_by = req.query.order_by || "desc";
 
-    // if (!application) {
-    //   return { success: false, message: "Application not found." };
-    // }
+    const { id, status } = req.query;
 
-    return {
-      success: true,
-      message: "Application approved and profile status updated to 100%.",
-      application,
-    };
-  } catch (error) {
-    return { success: false, message: error.message };
-  }
-}
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * size;
 
-async function declineApplication(applicationId) {
-  try {
-    const application = await Application.findByIdAndUpdate(
-      applicationId,
-      { status: "declined" },
-      { new: true }
-    );
-
-    // if (!application) {
-    //   return { success: false, message: "Application not found." };
-    // }
-
-    return { success: true, message: "Application declined.", application };
-  } catch (error) {
-    return { success: false, message: error.message };
-  }
-}
-
-async function getPendingApplicationsForOrganization(organization_name) {
-  try {
-    // Fetch pending applications for the organization
-    const pendingApplications = await Application.find({
-      organizationName: organization_name,
-      status: "pending",
-    });
-
-    // if (!pendingApplications || pendingApplications.length === 0) {
-    //   return { success: false, message: "No pending applications found." };
-    // }
-
-    return { success: true, applications: pendingApplications };
-  } catch (error) {
-    console.error("Error fetching pending applications:", error.message);
-    return { success: false, message: error.message };
-  }
-}
-
-async function getApprovedApplicationsForOrganization(req, res) {
-  try {
-    const { organizationId } = req.params;
-
-    const approvedApplications = await Application.find({
-      organizationName: organizationId,
-      status: "approved",
-    });
-
-    // if (!approvedApplications || approvedApplications.length === 0) {
-    //   return res.status(404).json({
-    //     success: false,
-    //     message: "No approved applications found for this organization.",
-    //   });
-    // }
-
-    res.status(200).json({
-      success: true,
-      applications: approvedApplications,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "An error occurred while fetching approved applications.",
-      error: error.message,
-    });
-  }
-}
-
-async function getAllApplicationsForOrganization(req, res) {
-  try {
-    const { organization_name } = req.query;
-
-    if (!organization_name) {
+    if (!id) {
       return res
         .status(400)
-        .json({ success: false, message: "Organization is required" });
+        .json({ success: false, message: "Organization ID is required" });
     }
 
-    const allAppllications = await Application.find({
-      organizationName: organization_name,
+    let applications;
+
+    let totalApplications;
+
+    if (status === "all") {
+      applications = await Application.find({
+        organizationId: id,
+      })
+        .sort({ createdAt: order_by === "asc" ? 1 : -1 })
+        .skip(skip)
+        .limit(size);
+
+      // Get the total number of applications (for pagination metadata)
+      totalApplications = await Application.countDocuments({
+        organizationId: id,
+      });
+    } else {
+      if (!["pending", "approved", "declined"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+
+      applications = await Application.find({
+        organizationId: id,
+        status,
+      })
+        .sort({ createdAt: order_by === "asc" ? 1 : -1 })
+        .skip(skip)
+        .limit(size);
+
+      // Get the total number of applications (for pagination metadata)
+      totalApplications = await Application.countDocuments({
+        organizationId: id,
+        status,
+      });
+    }
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalApplications / size);
+
+    // Return the response with pagination metadata
+    res.status(200).json({
+      success: true,
+      applications,
+      pagination: {
+        page,
+        size,
+        totalApplications,
+        totalPages,
+      },
     });
-
-    // if (!allAppllications || allAppllications.length === 0) {
-    //   return res.status(404).json({
-    //     success: false,
-    //     message: "No applications found for this organization.",
-    //   });
-    // }
-
-    return res.status(200).json({ success: true, allAppllications });
   } catch (error) {
     console.error("Error fetching all applications:", error.message);
     return { success: false, message: error.message };
   }
 }
 
-async function getApprovedProviders(req, res) {
+// Get Stats of Providers Applications in Organizations Dashboard  (FE: Organization Route)
+async function getApplicationStatsForOrganization(req, res) {
   try {
     const { organizationId } = req.params;
 
-    //   Find approved applications for the organization
-    const approvedApplications = await Application.find({
-      organizationName: organizationId,
-      status: "approved",
-    });
-
-    if (!approvedApplications || approvedApplications.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No approved applications found for this organization.",
-      });
-    }
-
-    //   Extract userIds from approved applications
-    const userIds = approvedApplications.map((app) => app.userId);
-
-    //   Fetch user details using the userIds
-    const users = await User.find({ _id: { $in: userIds } });
-
-    // if (!users || users.length === 0) {
-    //   return res.status(404).json({
-    //     success: false,
-    //     message: "No users found for the approved applications.",
-    //   });
-    // }
-
-    //   Return the users and their corresponding applications
-    const response = users.map((user) => ({
-      provider: user,
-      applications: approvedApplications.filter(
-        (app) => app.userId.toString() === user._id.toString()
-      ),
-    }));
-
-    return res.status(200).json({
-      success: true,
-      data: response,
-    });
-  } catch (error) {
-    console.error(
-      "Error fetching approved applications and users:",
-      error.message
-    );
-    return res.status(500).json({
-      success: false,
-      message:
-        "An error occurred while fetching approved applications and users.",
-      error: error.message,
-    });
-  }
-}
-
-async function getApplicationStatsForOrganization(req, res) {
-  try {
-    const { organizationName } = req.params;
-
     // Fetch applications and group by status
     const statusStats = await Application.aggregate([
-      { $match: { organizationName } },
+      { $match: { organizationId } },
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
 
@@ -206,6 +108,118 @@ async function getApplicationStatsForOrganization(req, res) {
     return res.status(500).json({
       success: false,
       message: "An error occurred while fetching statistics.",
+      error: error.message,
+    });
+  }
+}
+
+// Update (Providers) Filled Applications Based On The Status Passed (FE: Organization Route)
+async function updateProviderApplication(req, res) {
+  try {
+    const { applicationId } = req.params;
+    const { status } = req.query;
+
+    console.log(status, "status,statusstatus");
+
+    if (!applicationId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Organization is required" });
+    }
+
+    if (!status) {
+      return res
+        .status(400)
+        .json({ success: false, message: "New Status is required" });
+    }
+
+    const application = await Application.findByIdAndUpdate(
+      applicationId,
+      { status },
+      { new: true }
+    );
+
+    if (!application) {
+      return { success: false, message: "Application not found." };
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Application ${status} successfully`,
+      application,
+    });
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+}
+
+// Get Applications of Providers which their Applications have been Approved (FE: Organization Route)
+async function getApprovedProviders(req, res) {
+  try {
+    // Extract query parameters for pagination
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 10;
+    const order_by = req.query.order_by || "desc";
+    const { organizationId } = req.params;
+
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * size;
+
+    //   Find approved applications for the organization
+    const approvedApplications = await Application.find({
+      organizationId,
+      status: "approved",
+    });
+
+    if (!approvedApplications || approvedApplications.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No approved applications found for this organization.",
+      });
+    }
+
+    //   Extract userIds from approved applications
+    const userIds = approvedApplications.map((app) => app.userId);
+
+    //   Fetch user details using the userIds
+    const users = await User.find({ _id: { $in: userIds } })
+      .sort({ createdAt: order_by === "asc" ? 1 : -1 })
+      .skip(skip)
+      .limit(size);
+
+    // Get the total number of users (for pagination metadata)
+    const totalUsers = await User.countDocuments({ _id: { $in: userIds } });
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalUsers / size);
+
+    //   Return the users and their corresponding applications
+    const response = users.map((user) => ({
+      provider: user,
+      applications: approvedApplications.filter(
+        (app) => app.userId.toString() === user._id.toString()
+      ),
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data: response,
+      pagination: {
+        page,
+        size,
+        totalUsers,
+        totalPages,
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Error fetching approved applications and users:",
+      error.message
+    );
+    return res.status(500).json({
+      success: false,
+      message:
+        "An error occurred while fetching approved applications and users.",
       error: error.message,
     });
   }
@@ -235,49 +249,10 @@ async function getUserDetailsByBearerToken(token) {
   }
 }
 
-const fetchApplicationsByOrganization = async (req, res) => {
-  try {
-    const { organizationApplicationId } = req.params;
-
-    // Check if the organization exists
-    const organization = await OrganizationApplication.findById(
-      organizationApplicationId
-    );
-    if (!organization) {
-      return res
-        .status(404)
-        .json({ message: "Credentialing organization not found" });
-    }
-
-    // Fetch applications associated with the organization
-    const applications = await Application.find({
-      organizationApplication: organizationApplicationId,
-    }).populate("userId", "firstName lastName email");
-
-    // if (applications.length === 0) {
-    //   return res
-    //     .status(404)
-    //     .json({ message: "No applications found for this organization" });
-    // }
-
-    res.status(200).json({
-      message: "Applications fetched successfully",
-      applications,
-    });
-  } catch (error) {
-    console.error("Error fetching applications:", error.message);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
 module.exports = {
-  getAllApplicationsForOrganization,
-  approveApplication,
-  declineApplication,
-  getPendingApplicationsForOrganization,
-  getApprovedApplicationsForOrganization,
+  getApplicationsFromProvidersBaseonStatus,
+  updateProviderApplication,
   getUserDetailsByBearerToken,
-  fetchApplicationsByOrganization,
   getApprovedProviders,
   getApplicationStatsForOrganization,
 };

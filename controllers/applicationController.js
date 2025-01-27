@@ -78,9 +78,7 @@ const getApplicationById = async (req, res) => {
     const application = await Application.findById(applicationId).populate(
       "userId"
     );
-    // if (!application) {
-    //   return res.status(404).json({ message: "Application not found" });
-    // }
+
     res.status(200).json({ application });
   } catch (error) {
     console.error(error);
@@ -96,12 +94,6 @@ const getMostRecentApplication = async (req, res) => {
     const recentApplication = await Application.findOne({ userId })
       .sort({ createdAt: -1 })
       .exec();
-
-    // if (!recentApplication) {
-    //   return res
-    //     .status(404)
-    //     .json({ message: "No applications found for the user" });
-    // }
 
     res.status(200).json({
       message: "Most recent application retrieved successfully",
@@ -120,11 +112,11 @@ const getApplicationsByStatusAndUserId = async (req, res) => {
     const size = parseInt(req.query.size) || 10;
     const order_by = req.query.order_by || "desc";
 
-    // Calculate the number of documents to skip
-    const skip = (page - 1) * size;
-
     const { userId } = req.params;
     const { status } = req.query;
+
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * size;
 
     if (!["pending", "approved", "declined"].includes(status)) {
       return res.status(400).json({ message: "Invalid status value" });
@@ -138,7 +130,10 @@ const getApplicationsByStatusAndUserId = async (req, res) => {
       .limit(size);
 
     // Get the total number of applications (for pagination metadata)
-    const totalApplications = await OrgApplication.countDocuments();
+    const totalApplications = await Application.countDocuments({
+      userId,
+      status,
+    });
 
     // Calculate total pages
     const totalPages = Math.ceil(totalApplications / size);

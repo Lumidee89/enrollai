@@ -23,13 +23,9 @@ const {
   toggleApplicationStatus,
 } = require("../controllers/credentialingApplication");
 const {
-  approveApplication,
-  declineApplication,
-  getPendingApplicationsForOrganization,
-  getApprovedApplicationsForOrganization,
+  updateProviderApplication,
 
-  fetchApplicationsByOrganization,
-  getAllApplicationsForOrganization,
+  getApplicationsFromProvidersBaseonStatus,
   getApprovedProviders,
   getApplicationStatsForOrganization,
 } = require("../controllers/credController");
@@ -88,14 +84,23 @@ router.delete(
   deleteOrganizationCreatedApplications
 );
 
-// Get All Returned Filled Applications (FE: Organization Route)
-router.get("/applications", getAllApplicationsForOrganization);
+// Applications
 
-// Get All Incoming Applications (FE: Organization Route)
+// Get All Returned Filled Applications Based On Their Status (FE: Organization Route)
+router.get("/applications", getApplicationsFromProvidersBaseonStatus);
+
+// Get Stats of Providers Applications in Organizations Dashboard  (FE: Organization Route)
 router.get(
-  "/incoming/:organizationApplicationId",
-  fetchApplicationsByOrganization
+  "/:organizationId/application-stats",
+  getApplicationStatsForOrganization
 );
+
+// Update (Providers) Filled Applications Based On The Status Passed (FE: Organization Route)
+router.put("/update-application/:applicationId", updateProviderApplication);
+
+// Providers
+// Get Applications of Providers which their Applications have been Approved (FE: Organization Route)
+router.get("/get-providers/:organizationId", getApprovedProviders);
 
 router.get("/getApplications/all", protect, getAllOrganizations);
 router.get("/details", authenticateOrganization, getOrganizationDetails);
@@ -114,91 +119,6 @@ router.put(
   "/change-password",
   authenticateOrganization,
   changeOrganizationPassword
-);
-
-// router.delete("/:id", protect, authorize("organization"), deleteApplication);
-
-router.put("/approve/:applicationId", async (req, res) => {
-  const { applicationId } = req.params;
-
-  if (!applicationId) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Organization is required" });
-  }
-
-  const result = await approveApplication(applicationId);
-  if (result.success) {
-    return res.status(200).json(result);
-  } else {
-    return res.status(400).json(result);
-  }
-});
-
-router.put("/decline/:applicationId", async (req, res) => {
-  const { applicationId } = req.params;
-  const result = await declineApplication(applicationId);
-  if (result.success) {
-    return res.status(200).json(result);
-  } else {
-    return res.status(400).json(result);
-  }
-});
-
-router.get("/incoming-applications", async (req, res) => {
-  try {
-    const { organization_name } = req.query;
-
-    if (!organization_name) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Organization is required" });
-    }
-
-    const result = await getPendingApplicationsForOrganization(
-      organization_name
-    );
-
-    if (result.success) {
-      return res.status(200).json(result);
-    } else {
-      return res
-        .status(404)
-        .json({ success: false, message: "No applications found" });
-    }
-  } catch (error) {
-    console.error("Error fetching incoming applications:", error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-});
-
-router.get(
-  "/:organizationName/application-stats",
-  getApplicationStatsForOrganization
-);
-
-router.get("/get-providers/:organizationId", getApprovedProviders);
-
-// router.get("/get-providers", async (req, res) => {
-//   const token = req.headers.authorization?.split(" ")[1];
-
-//   if (!token) {
-//     return res
-//       .status(401)
-//       .json({ success: false, message: "No token provided." });
-//   }
-
-//   const result = await getUserDetailsByBearerToken(token);
-//   if (result.success) {
-//     res.status(200).json(result);
-//   } else {
-//     res.status(400).json(result);
-//   }
-// });
-
-router.get(
-  "/approved-applications/:organizationId",
-  getApprovedApplicationsForOrganization
 );
 
 router.delete(

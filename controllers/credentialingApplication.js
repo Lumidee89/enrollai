@@ -97,8 +97,8 @@ const getPostedApplicationsForProviders = async (req, res) => {
     // Calculate the number of documents to skip
     const skip = (page - 1) * size;
 
-    // Fetch applications with pagination and sorting
-    const applications = await OrgApplication.find()
+    // Fetch applications with pagination , sorting  and if application is active
+    const applications = await OrgApplication.find({ status: true })
       .populate(
         "organization",
         "organizationName administratorFullName workEmail"
@@ -108,7 +108,9 @@ const getPostedApplicationsForProviders = async (req, res) => {
       .limit(size);
 
     // Get the total number of applications (for pagination metadata)
-    const totalApplications = await OrgApplication.countDocuments();
+    const totalApplications = await OrgApplication.countDocuments({
+      status: true,
+    });
 
     // Calculate total pages
     const totalPages = Math.ceil(totalApplications / size);
