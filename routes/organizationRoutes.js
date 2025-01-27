@@ -14,6 +14,7 @@ const {
   resetOrganizationPassword,
   clearAllOrganizations,
   deleteOrganization,
+  clearAllOrganizationsCreatedApplications,
 } = require("../controllers/organizationController");
 const { protect, authorize } = require("../middleware/authMiddleware");
 const {
@@ -138,6 +139,13 @@ router.delete(
   // protect,
   // authorize("organization"),
   clearAllOrganizations
+);
+
+router.delete(
+  "/delete/all/created-applications",
+  // protect,
+  // authorize("organization"),
+  clearAllOrganizationsCreatedApplications
 );
 
 module.exports = router;

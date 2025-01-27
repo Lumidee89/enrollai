@@ -186,7 +186,7 @@ const applicationSchema = new mongoose.Schema(
         ECFMGFile: { type: String },
 
         medicaidIDNumber: { type: String },
-        medicaidCertificate: { type: Date },
+        medicaidCertificate: { type: String },
       },
 
       otherMedLicenses: {

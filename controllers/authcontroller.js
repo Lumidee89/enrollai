@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { logActivity } = require("../controllers/activityController");
 const emailTemplates = require("../utils/emailTemplate");
+const Application = require("../models/applicationModel");
 require("dotenv").config();
 
 exports.register = async (req, res) => {
@@ -266,6 +267,8 @@ exports.deleteUserAccount = async (req, res) => {
     }
 
     await User.findByIdAndDelete(userId);
+    //   Delete all applications created by the organization
+    await Application.deleteMany({ organization: organizationId });
 
     res.status(200).json({ message: "User account deleted successfully" });
   } catch (error) {

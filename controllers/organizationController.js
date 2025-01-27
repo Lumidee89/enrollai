@@ -5,6 +5,7 @@ const generateOtp = require("../utils/generateOTP");
 const emailTemplates = require("../utils/emailTemplate");
 const sendEmail = require("../utils/sendEmail");
 const { logActivity } = require("./activityController");
+const OrgApplication = require("../models/credentialingApplication");
 require("dotenv").config();
 
 const registerOrganization = async (req, res) => {
@@ -396,19 +397,57 @@ const deleteOrganization = async (req, res) => {
   try {
     const organizationId = req.organizationId;
 
+    //  Find and delete the organization
     const organization = await Organization.findByIdAndDelete(organizationId);
 
     if (!organization) {
       return res.status(404).json({ message: "Organization not found" });
     }
 
+    //   Delete all applications created by the organization
+    await OrgApplication.deleteMany({ organization: organizationId });
+
+    //  Return success response
     res.status(200).json({
       success: true,
-      message: "Organization account deleted successfully",
+      message:
+        "Organization account and all associated applications deleted successfully",
     });
   } catch (error) {
     console.error("Error deleting organization account:", error.message);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+const clearAllOrganizationsCreatedApplications = async (req, res) => {
+  try {
+    // Delete all organizations from the database
+    const result = await OrgApplication.deleteMany({});
+
+    // Check if any organizations were deleted
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No organizations Created Applications found to delete.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message:
+        "All organizations Created Applications have been deleted successfully.",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error(
+      "Error clearing organizations Created Applications:",
+      error.message
+    );
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while clearing organizations.",
+      error: error.message,
+    });
   }
 };
 
@@ -457,4 +496,5 @@ module.exports = {
   getOrganizationDetailsByID,
   deleteOrganization,
   clearAllOrganizations,
+  clearAllOrganizationsCreatedApplications,
 };
