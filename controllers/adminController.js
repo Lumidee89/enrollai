@@ -286,9 +286,21 @@ exports.getAllProviders = async (req, res) => {
 
 exports.getAllOrganizations = async (req, res) => {
   try {
+    // Extract query parameters for pagination
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 5;
+    const order_by = req.query.order_by || "desc";
+
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * size;
+
     const organizations = await Organization.find({
       accountType: "organization",
-    }).select("-password");
+    })
+      .select("-password")
+      .sort({ createdAt: order_by === "asc" ? 1 : -1 })
+      .skip(skip)
+      .limit(size);
 
     organizations.forEach((admin) => {
       if (typeof admin.createdAt === "string") {
@@ -299,9 +311,24 @@ exports.getAllOrganizations = async (req, res) => {
     // Sort organizations by createdAt in descending order
     organizations.sort((a, b) => b.createdAt - a.createdAt);
 
-    return res.status(200).json({
+    // Get the total number of Users (for pagination metadata)
+    const totalUsers = await User.countDocuments({
+      accountType: "super_admin",
+    });
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalUsers / size);
+
+    // Return the response with pagination metadata
+    res.status(200).json({
       success: true,
       data: organizations,
+      pagination: {
+        page,
+        size,
+        totalUsers,
+        totalPages,
+      },
     });
   } catch (error) {
     console.error("Error fetching credentialing organizations:", error);

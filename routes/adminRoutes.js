@@ -25,7 +25,7 @@ router.get(
   getAllApplicationsBasedOnStatus
 );
 
-// Get Stats of Providers Applications in Organizations Dashboard (FE: Admin Route)
+// Get Stats Applications in Admin Dashboard (FE: Admin Route)
 router.get(
   "/application-stats",
   protect,
@@ -33,9 +33,11 @@ router.get(
   getApplicationStats
 );
 
+// Get All Admin Users   (FE: Admin Route)
 router.get("/all", protect, authorize("super_admin"), getAllAdmins);
+// Get All Providers Users   (FE: Admin Route)
 router.get("/providers", protect, authorize("super_admin"), getAllProviders);
-
+// Get All Organizations Users   (FE: Admin Route)
 router.get(
   "/credentialing-organizations",
   protect,
