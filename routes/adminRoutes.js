@@ -33,6 +33,8 @@ router.get(
   getApplicationStats
 );
 
+// Users
+
 // Get All Admin Users   (FE: Admin Route)
 router.get("/all", protect, authorize("super_admin"), getAllAdmins);
 // Get All Providers Users   (FE: Admin Route)
@@ -45,8 +47,10 @@ router.get(
   getAllOrganizations
 );
 
+// Update Admin Profile (FE: Admin Route)
 router.put("/update/profile", protect, authorize("super_admin"), updateProfile);
 
+// Delete Admin Account (FE: Admin Route)
 router.delete("/delete", protect, authorize("super_admin"), deleteAdminAccount);
 
 module.exports = router;

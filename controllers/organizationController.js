@@ -328,29 +328,31 @@ const updateOrganizationDetails = async (req, res) => {
       organizationName,
       administratorFullName,
       workEmail,
-      profilePicture,
     };
 
-    // if (req.file) { updateData.profilePicture = req.file.path; }
+    // Add profilePicture to updateData if it exists
+    if (profilePicture) updateData.profilePicture = profilePicture;
 
-    updateData.profileStatus = 100;
-
+    // Use findByIdAndUpdate to update the organization and return the full document
     const updatedOrganization = await Organization.findByIdAndUpdate(
       req.organizationId,
       updateData,
       { new: true, runValidators: true }
     );
 
+    // If no organization is found, return a 404 error
     if (!updatedOrganization) {
       return res.status(404).json({ message: "Organization not found" });
     }
 
+    // Log the activity
     await logActivity(
       req.organizationId,
       "update profile",
-      "User update profile successfully"
+      "User updated profile successfully"
     );
 
+    // Return the updated organization document
     res.status(200).json({
       success: true,
       message: "Organization details updated successfully",

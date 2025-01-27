@@ -13,6 +13,7 @@ const activityLogSchema = new mongoose.Schema({
       "create-application",
       "delete-application",
       "toggle-application-status",
+      "create admin user",
     ],
     required: true,
   },

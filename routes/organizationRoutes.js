@@ -13,6 +13,7 @@ const {
   forgotOrganizationPassword,
   resetOrganizationPassword,
   clearAllOrganizations,
+  deleteOrganization,
 } = require("../controllers/organizationController");
 const { protect, authorize } = require("../middleware/authMiddleware");
 const {
@@ -46,7 +47,7 @@ router.post("/reset-password", resetOrganizationPassword);
 
 // Applications
 
-// Creadentialing Organization Applications
+// Credentialing Organization Applications
 
 // Create Application for Providers to fill
 router.post(
@@ -102,23 +103,34 @@ router.put("/update-application/:applicationId", updateProviderApplication);
 // Get Applications of Providers which their Applications have been Approved (FE: Organization Route)
 router.get("/get-providers/:organizationId", getApprovedProviders);
 
-router.get("/getApplications/all", protect, getAllOrganizations);
-router.get("/details", authenticateOrganization, getOrganizationDetails);
-router.get(
-  "/details/:id",
-  authenticateOrganization,
-  getOrganizationDetailsByID
-);
+// Profile
+
+// Update Organization Profile
 router.put(
   "/update",
   authenticateOrganization,
   upload.single("profilePicture"),
   updateOrganizationDetails
 );
+
+// Change Organization Profile Password
 router.put(
   "/change-password",
   authenticateOrganization,
   changeOrganizationPassword
+);
+
+// Delete Organization Account
+router.delete("/delete", authenticateOrganization, deleteOrganization);
+
+//
+
+router.get("/getApplications/all", protect, getAllOrganizations);
+router.get("/details", authenticateOrganization, getOrganizationDetails);
+router.get(
+  "/details/:id",
+  authenticateOrganization,
+  getOrganizationDetailsByID
 );
 
 router.delete(

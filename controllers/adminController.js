@@ -1,8 +1,12 @@
 const Application = require("../models/applicationModel");
 const Organization = require("../models/Organization");
 const User = require("../models/User");
-const { logActivity } = require("./activityController");
+const generateOtp = require("../utils/generateOTP");
+const emailTemplates = require("../utils/emailTemplate");
+const { logActivity } = require("../controllers/activityController");
+const sendEmail = require("../utils/sendEmail");
 
+// Create a new admin account (FE: Admin Route)
 exports.createSuperAdmin = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
@@ -28,11 +32,24 @@ exports.createSuperAdmin = async (req, res) => {
       password,
       accountType: "super_admin",
       profilePicture: null,
-      //
-      isVerified: true,
+      createdAt: new Date(),
     });
 
+    newSuperAdmin.otp = generateOtp();
+    newSuperAdmin.otpCreatedAt = new Date();
+
     await newSuperAdmin.save();
+
+    const emailSubject = "Admin OTP Verification Code";
+    const emailText = emailTemplates.otpVerification(newSuperAdmin.otp);
+
+    await sendEmail(newSuperAdmin.email, emailSubject, emailText);
+
+    await logActivity(
+      req.user._id,
+      "create admin user",
+      "You created a new admin account"
+    );
 
     res.status(201).json({
       success: true,
@@ -53,6 +70,7 @@ exports.createSuperAdmin = async (req, res) => {
   }
 };
 
+//  Get (All, Imcoming, Declined & Approved) Applications from Providers Based on their Status (FE: Admin Route)
 exports.getAllApplicationsBasedOnStatus = async (req, res) => {
   try {
     // Extract query parameters for pagination
@@ -119,6 +137,7 @@ exports.getAllApplicationsBasedOnStatus = async (req, res) => {
   }
 };
 
+// Get Stats Applications in Admin Dashboard (FE: Admin Route)
 exports.getApplicationStats = async (req, res) => {
   try {
     // Aggregate applications by status and count them
@@ -155,6 +174,7 @@ exports.getApplicationStats = async (req, res) => {
   }
 };
 
+// Get All Admin Users   (FE: Admin Route)
 exports.getAllAdmins = async (req, res) => {
   try {
     // Extract query parameters for pagination
@@ -210,6 +230,7 @@ exports.getAllAdmins = async (req, res) => {
   }
 };
 
+// Get All Providers Users   (FE: Admin Route)
 exports.getAllProviders = async (req, res) => {
   try {
     // Extract query parameters for pagination
@@ -284,6 +305,7 @@ exports.getAllProviders = async (req, res) => {
   }
 };
 
+// Get All Organizations Users   (FE: Admin Route)
 exports.getAllOrganizations = async (req, res) => {
   try {
     // Extract query parameters for pagination
@@ -339,6 +361,7 @@ exports.getAllOrganizations = async (req, res) => {
   }
 };
 
+// Delete Admin Account (FE: Admin Route)
 exports.deleteAdminAccount = async (req, res) => {
   try {
     const userId = req.user._id;
