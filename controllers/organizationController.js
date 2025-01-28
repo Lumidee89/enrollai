@@ -7,6 +7,7 @@ const sendEmail = require("../utils/sendEmail");
 const { logActivity } = require("./activityController");
 const OrgApplication = require("../models/credentialingApplication");
 const Application = require("../models/applicationModel");
+const User = require("../models/User");
 require("dotenv").config();
 
 const registerOrganization = async (req, res) => {
@@ -18,6 +19,9 @@ const registerOrganization = async (req, res) => {
       workEmail,
       password,
     } = req.body;
+
+    let user = await User.findOne({ email });
+    if (user) return res.status(400).json({ msg: "User already exists" });
 
     const existingOrganization = await Organization.findOne({ workEmail });
     const existingOrganizationName = await Organization.findOne({

@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const { logActivity } = require("../controllers/activityController");
 const emailTemplates = require("../utils/emailTemplate");
 const Application = require("../models/applicationModel");
+const Organization = require("../models/Organization");
 require("dotenv").config();
 
 exports.register = async (req, res) => {
@@ -25,6 +26,15 @@ exports.register = async (req, res) => {
   try {
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ msg: "User already exists" });
+
+    const existingOrganization = await Organization.findOne({
+      workEmail: email,
+    });
+    if (existingOrganization) {
+      return res
+        .status(400)
+        .json({ message: "Organization with this email already exists" });
+    }
 
     user = new User({
       accountType,
