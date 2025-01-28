@@ -7,6 +7,11 @@ const OrganizationSchema = new mongoose.Schema({
     enum: ["organization", "credential specialist"],
     required: true,
   },
+  status: {
+    type: String,
+    enum: ["active", "suspended"],
+    default: "active",
+  },
   organizationName: { type: String, required: true },
   administratorFullName: { type: String, required: true },
   workEmail: { type: String, required: true, unique: true },

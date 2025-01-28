@@ -101,6 +101,11 @@ exports.login = async (req, res) => {
     if (!user.isVerified)
       return res.status(400).json({ msg: "Account not verified" });
 
+    if (user.status === "suspended")
+      return res.status(403).json({
+        msg: "Your account have been suspended. Please Contact Support.",
+      });
+
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
 
     await logActivity(user._id, "login", "User logged in successfully");
@@ -267,8 +272,9 @@ exports.deleteUserAccount = async (req, res) => {
     }
 
     await User.findByIdAndDelete(userId);
-    //   Delete all applications created by the organization
-    await Application.deleteMany({ organization: organizationId });
+
+    //   Delete all applications created by the user
+    await Application.deleteMany({ userId });
 
     res.status(200).json({ message: "User account deleted successfully" });
   } catch (error) {

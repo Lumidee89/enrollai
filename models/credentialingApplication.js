@@ -10,6 +10,11 @@ const ApplicationSchema = new mongoose.Schema({
   applicationTitle: { type: String, required: true },
   status: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
+  visibility: {
+    type: Boolean,
+
+    default: true,
+  },
 });
 
 module.exports = mongoose.model("Credapplication", ApplicationSchema);

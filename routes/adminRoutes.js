@@ -9,6 +9,8 @@ const {
   getAllApplicationsBasedOnStatus,
   getAllAdmins,
   deleteAdminAccount,
+  changeAccountStatus,
+  deleteProviderOrOrganization,
 } = require("../controllers/adminController");
 const { updateProfile } = require("../controllers/authcontroller");
 
@@ -45,6 +47,22 @@ router.get(
   protect,
   authorize("super_admin"),
   getAllOrganizations
+);
+
+// Change Status of a Provider or Organization Account (FE: Admin Route)
+router.put(
+  "/change-account-status",
+  protect,
+  authorize("super_admin"),
+  changeAccountStatus
+);
+
+// Delete Provider Or Organization Account Along side all thier Applications  (FE: Admin Route)
+router.delete(
+  "/delete-provider-or-organization",
+  protect,
+  authorize("super_admin"),
+  deleteProviderOrOrganization
 );
 
 // Update Admin Profile (FE: Admin Route)

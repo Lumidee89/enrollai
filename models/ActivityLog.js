@@ -14,6 +14,7 @@ const activityLogSchema = new mongoose.Schema({
       "delete-application",
       "toggle-application-status",
       "create admin user",
+      "change user status",
     ],
     required: true,
   },

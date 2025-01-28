@@ -23,6 +23,7 @@ const applicationSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
     step1: {
       personalInformation: {
         lastName: { type: String, required: true },
@@ -275,6 +276,11 @@ const applicationSchema = new mongoose.Schema(
       type: String,
       enum: ["pending", "approved", "declined"],
       default: "pending",
+    },
+    visibility: {
+      type: Boolean,
+
+      default: true,
     },
   },
   { timestamps: true }

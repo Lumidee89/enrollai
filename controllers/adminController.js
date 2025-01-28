@@ -5,6 +5,7 @@ const generateOtp = require("../utils/generateOTP");
 const emailTemplates = require("../utils/emailTemplate");
 const { logActivity } = require("../controllers/activityController");
 const sendEmail = require("../utils/sendEmail");
+const OrgApplication = require("../models/credentialingApplication");
 
 // Create a new admin account (FE: Admin Route)
 exports.createSuperAdmin = async (req, res) => {
@@ -358,6 +359,131 @@ exports.getAllOrganizations = async (req, res) => {
       success: false,
       message: "Server error. Please try again later.",
     });
+  }
+};
+
+// Change Status of a Provider or Organization Account (FE: Admin Route)
+exports.changeAccountStatus = async (req, res) => {
+  try {
+    const { id, type, status } = req.query;
+
+    if (!type) {
+      return res
+        .status(400)
+        .json({ message: "Provider or Organization type is required" });
+    }
+
+    if (!status) {
+      return res.status(400).json({ message: "New status is required" });
+    }
+
+    let user;
+
+    if (type === "provider") {
+      user = await User.findById(id);
+    } else if (type === "organization") {
+      user = await Organization.findById(id);
+    } else {
+      return res.status(400).json({ message: "Invalid type specified" });
+    }
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User or Organization not found" });
+    }
+
+    // Determine the new visibility based on the status
+    const newVisibility = status === "active" ? true : false;
+
+    if (type === "provider") {
+      // Update visibility for all applications submitted by the provider
+      await Application.updateMany(
+        { userId: id },
+        { visibility: newVisibility }
+      );
+    } else if (type === "organization") {
+      // Update visibility for all providers' applications related to the organization
+      await Application.updateMany(
+        { organizationId: id },
+        { visibility: newVisibility }
+      );
+
+      // Update visibility for all applications created by the organization
+      await OrgApplication.updateMany(
+        { organization: id },
+        { status: newVisibility }
+      );
+    }
+
+    // Update the status of the user or organization
+    user.status = status;
+
+    // Save the updated user or organization
+    await user.save();
+
+    // Log the activity
+    await logActivity(
+      req.user._id,
+      "change user status",
+      `User status changed to ${user.status}`
+    );
+
+    // Return the updated user or organization
+    res.status(200).json({
+      message: "User status successfully changed",
+      user,
+    });
+  } catch (error) {
+    console.error("Error in changeAccountStatus:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// Delete Provider Or Organization Account Along side all thier Applications  (FE: Admin Route)
+exports.deleteProviderOrOrganization = async (req, res) => {
+  try {
+    const { id, type } = req.query;
+
+    if (!type) {
+      return res
+        .status(400)
+        .json({ message: "Provider or Organization type is required" });
+    }
+
+    let user;
+
+    if (type === "provider") {
+      user = await User.findByIdAndDelete(id);
+    } else if (type === "organization") {
+      user = await Organization.findByIdAndDelete(id);
+    } else {
+      return res.status(400).json({ message: "Invalid type specified" });
+    }
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User or Organization not found" });
+    }
+
+    if (type === "provider") {
+      // Delete all applications created by the user
+      await Application.deleteMany({ userId: id });
+    } else if (type === "organization") {
+      // Delete all providers' applications related to the organization
+      await Application.deleteMany({ organizationId: id });
+
+      // Delete all applications created by the organization
+      await OrgApplication.deleteMany({ organization: id });
+    }
+
+    res
+      .status(200)
+      .json({ message: "User or Organization deleted successfully" });
+  } catch (error) {
+    console.error("Error in deleteProviderOrOrganization:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 

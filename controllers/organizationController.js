@@ -6,6 +6,7 @@ const emailTemplates = require("../utils/emailTemplate");
 const sendEmail = require("../utils/sendEmail");
 const { logActivity } = require("./activityController");
 const OrgApplication = require("../models/credentialingApplication");
+const Application = require("../models/applicationModel");
 require("dotenv").config();
 
 const registerOrganization = async (req, res) => {
@@ -111,6 +112,11 @@ const loginOrganization = async (req, res) => {
       return res
         .status(400)
         .json({ msg: "Account not verified. Please verify your email." });
+
+    if (organization.status === "suspended")
+      return res.status(403).json({
+        msg: "Your account have been suspended. Please Contact Support.",
+      });
 
     const token = jwt.sign(
       { userId: organization._id, accountType: "organization" },
@@ -406,6 +412,9 @@ const deleteOrganization = async (req, res) => {
 
     //   Delete all applications created by the organization
     await OrgApplication.deleteMany({ organization: organizationId });
+
+    // Delete All Providers Applications related to the Organization
+    await Application.deleteMany({ organizationId: organizationId });
 
     //  Return success response
     res.status(200).json({

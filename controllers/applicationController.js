@@ -23,6 +23,19 @@ const createApplication = async (req, res) => {
       applicationTitle,
       organizationName,
       organizationId,
+
+      // If Files are already in String format (URL)
+      medicaidCertificate: medicaidCertificateURLString,
+      ECFMGFile: ECFMGFileURLString,
+      controlledSubstanceExpirationFile:
+        controlledSubstanceExpirationFileURLString,
+      deaExpirationFile: deaExpirationFileURLString,
+      stateMedicalLicensefile1: stateMedicalLicensefile1URLString,
+      stateMedicalLicensefile2: stateMedicalLicensefile2URLString,
+      stateMedicalLicensefile3: stateMedicalLicensefile3URLString,
+      certificationfile1: certificationfile1URLString,
+      certificationfile2: certificationfile2URLString,
+      certificationfile3: certificationfile3URLString,
     } = req.body;
 
     const {
@@ -39,7 +52,6 @@ const createApplication = async (req, res) => {
     } = req.files;
 
     console.log(req.files, "Files received by multer");
-
     console.log(req.body, "Parsed body from multer");
 
     // Parse JSON strings into objects
@@ -64,7 +76,6 @@ const createApplication = async (req, res) => {
     const organizationApplication = await OrganizationApplication.findById(
       organizationApplicationId
     ).select("-password");
-
     if (!organizationApplication) {
       return res
         .status(404)
@@ -97,7 +108,7 @@ const createApplication = async (req, res) => {
         } else if (file && file.path) {
           const response = await cloudinary.uploader.upload(file.path, {
             resource_type: "auto",
-            folder: "files",
+            folder: `${userId} files`,
           });
           console.log("Cloudinary upload success:", response);
           return response.secure_url;
@@ -110,57 +121,66 @@ const createApplication = async (req, res) => {
       }
     };
 
-    // Upload files in step2.medicalLicenses
+    // Handle files and URL strings for step2.medicalLicenses
+    parsedStep2.medicalLicenses.medicaidCertificate =
+      medicaidCertificateURLString ||
+      (medicaidCertificate
+        ? await uploadToCloudinary(medicaidCertificate[0])
+        : null);
 
-    if (medicaidCertificate) {
-      parsedStep2.medicalLicenses.medicaidCertificate =
-        await uploadToCloudinary(medicaidCertificate[0]);
-    }
-    if (ECFMGFile) {
-      parsedStep2.medicalLicenses.ECFMGFile = await uploadToCloudinary(
-        ECFMGFile[0]
-      );
-    }
-    if (controlledSubstanceExpirationFile) {
-      parsedStep2.medicalLicenses.controlledSubstanceExpirationFile =
-        await uploadToCloudinary(controlledSubstanceExpirationFile[0]);
-    }
-    if (deaExpirationFile) {
-      parsedStep2.medicalLicenses.deaExpirationFile = await uploadToCloudinary(
-        deaExpirationFile[0]
-      );
-    }
+    parsedStep2.medicalLicenses.ECFMGFile =
+      ECFMGFileURLString ||
+      (ECFMGFile ? await uploadToCloudinary(ECFMGFile[0]) : null);
 
-    // Upload files in step2.otherMedLicenses
-    if (stateMedicalLicensefile1) {
-      parsedStep2.otherMedLicenses.stateMedicalLicensefile1 =
-        await uploadToCloudinary(stateMedicalLicensefile1[0]);
-    }
-    if (stateMedicalLicensefile2) {
-      parsedStep2.otherMedLicenses.stateMedicalLicensefile2 =
-        await uploadToCloudinary(stateMedicalLicensefile2[0]);
-    }
-    if (stateMedicalLicensefile3) {
-      parsedStep2.otherMedLicenses.stateMedicalLicensefile3 =
-        await uploadToCloudinary(stateMedicalLicensefile3[0]);
-    }
+    parsedStep2.medicalLicenses.controlledSubstanceExpirationFile =
+      controlledSubstanceExpirationFileURLString ||
+      (controlledSubstanceExpirationFile
+        ? await uploadToCloudinary(controlledSubstanceExpirationFile[0])
+        : null);
 
-    // Upload files in step3.boards
-    if (certificationfile1) {
-      parsedStep3.boards.certificationfile1 = await uploadToCloudinary(
-        certificationfile1[0]
-      );
-    }
-    if (certificationfile2) {
-      parsedStep3.boards.certificationfile2 = await uploadToCloudinary(
-        certificationfile2[0]
-      );
-    }
-    if (certificationfile3) {
-      parsedStep3.boards.certificationfile3 = await uploadToCloudinary(
-        certificationfile3[0]
-      );
-    }
+    parsedStep2.medicalLicenses.deaExpirationFile =
+      deaExpirationFileURLString ||
+      (deaExpirationFile
+        ? await uploadToCloudinary(deaExpirationFile[0])
+        : null);
+
+    // Handle files and URL strings for step2.otherMedLicenses
+    parsedStep2.otherMedLicenses.stateMedicalLicensefile1 =
+      stateMedicalLicensefile1URLString ||
+      (stateMedicalLicensefile1
+        ? await uploadToCloudinary(stateMedicalLicensefile1[0])
+        : null);
+
+    parsedStep2.otherMedLicenses.stateMedicalLicensefile2 =
+      stateMedicalLicensefile2URLString ||
+      (stateMedicalLicensefile2
+        ? await uploadToCloudinary(stateMedicalLicensefile2[0])
+        : null);
+
+    parsedStep2.otherMedLicenses.stateMedicalLicensefile3 =
+      stateMedicalLicensefile3URLString ||
+      (stateMedicalLicensefile3
+        ? await uploadToCloudinary(stateMedicalLicensefile3[0])
+        : null);
+
+    // Handle files and URL strings for step3.boards
+    parsedStep3.boards.certificationfile1 =
+      certificationfile1URLString ||
+      (certificationfile1
+        ? await uploadToCloudinary(certificationfile1[0])
+        : null);
+
+    parsedStep3.boards.certificationfile2 =
+      certificationfile2URLString ||
+      (certificationfile2
+        ? await uploadToCloudinary(certificationfile2[0])
+        : null);
+
+    parsedStep3.boards.certificationfile3 =
+      certificationfile3URLString ||
+      (certificationfile3
+        ? await uploadToCloudinary(certificationfile3[0])
+        : null);
 
     // Create the application with updated file URLs
     const newApplication = new Application({
@@ -207,6 +227,7 @@ const getApplicationById = async (req, res) => {
   }
 };
 
+// Get User Most Recent Application Details (FE: Provider Route)
 const getMostRecentApplication = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -244,7 +265,11 @@ const getApplicationsByStatusAndUserId = async (req, res) => {
     }
 
     // Fetch applications based on userId and status
-    const applications = await Application.find({ userId, status })
+    const applications = await Application.find({
+      userId,
+      status,
+      visibility: true,
+    })
       .populate("userId organizationApplication")
       .sort({ createdAt: order_by === "asc" ? 1 : -1 })
       .skip(skip)
@@ -254,6 +279,7 @@ const getApplicationsByStatusAndUserId = async (req, res) => {
     const totalApplications = await Application.countDocuments({
       userId,
       status,
+      visibility: true,
     });
 
     // Calculate total pages
@@ -290,6 +316,7 @@ const getApplicationsByUserId = async (req, res) => {
   }
 };
 
+// Get Stats of Providers Applications (FE: Provider Route)
 const getApplicationStatsByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -303,8 +330,8 @@ const getApplicationStatsByUserId = async (req, res) => {
     }
 
     const totalApplications = applications.length;
-    const activeApplications = applications.filter(
-      (app) => app.status === "active"
+    const approvedApplications = applications.filter(
+      (app) => app.status === "approved"
     ).length;
     const pendingApplications = applications.filter(
       (app) => app.status === "pending"
@@ -312,7 +339,7 @@ const getApplicationStatsByUserId = async (req, res) => {
 
     res.status(200).json({
       totalApplications,
-      activeApplications,
+      approvedApplications,
       pendingApplications,
     });
   } catch (error) {

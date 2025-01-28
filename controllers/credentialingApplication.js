@@ -61,7 +61,9 @@ const getCreatedApplicationsByOrganization = async (req, res) => {
       .limit(size);
 
     // Get the total number of applications (for pagination metadata)
-    const totalApplications = await OrgApplication.countDocuments();
+    const totalApplications = await OrgApplication.countDocuments({
+      organization: organizationId,
+    });
 
     // Calculate total pages
     const totalPages = Math.ceil(totalApplications / size);

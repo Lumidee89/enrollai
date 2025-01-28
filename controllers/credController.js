@@ -28,6 +28,7 @@ async function getApplicationsFromProvidersBaseonStatus(req, res) {
     if (status === "all") {
       applications = await Application.find({
         organizationId: id,
+        visibility: true,
       })
         .sort({ createdAt: order_by === "asc" ? 1 : -1 })
         .skip(skip)
@@ -36,6 +37,7 @@ async function getApplicationsFromProvidersBaseonStatus(req, res) {
       // Get the total number of applications (for pagination metadata)
       totalApplications = await Application.countDocuments({
         organizationId: id,
+        visibility: true,
       });
     } else {
       if (!["pending", "approved", "declined"].includes(status)) {
@@ -45,6 +47,7 @@ async function getApplicationsFromProvidersBaseonStatus(req, res) {
       applications = await Application.find({
         organizationId: id,
         status,
+        visibility: true,
       })
         .sort({ createdAt: order_by === "asc" ? 1 : -1 })
         .skip(skip)
@@ -54,6 +57,7 @@ async function getApplicationsFromProvidersBaseonStatus(req, res) {
       totalApplications = await Application.countDocuments({
         organizationId: id,
         status,
+        visibility: true,
       });
     }
 
@@ -84,7 +88,7 @@ async function getApplicationStatsForOrganization(req, res) {
 
     // Fetch applications and group by status
     const statusStats = await Application.aggregate([
-      { $match: { organizationId } },
+      { $match: { organizationId, visibility: true } },
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]);
 
@@ -154,6 +158,7 @@ async function updateProviderApplication(req, res) {
 }
 
 // Get Applications of Providers which their Applications have been Approved (FE: Organization Route)
+
 async function getApprovedProviders(req, res) {
   try {
     // Extract query parameters for pagination
@@ -165,10 +170,11 @@ async function getApprovedProviders(req, res) {
     // Calculate the number of documents to skip
     const skip = (page - 1) * size;
 
-    //   Find approved applications for the organization
+    // Find approved applications for the organization
     const approvedApplications = await Application.find({
       organizationId,
       status: "approved",
+      visibility: true,
     });
 
     if (!approvedApplications || approvedApplications.length === 0) {
@@ -178,22 +184,28 @@ async function getApprovedProviders(req, res) {
       });
     }
 
-    //   Extract userIds from approved applications
+    // Extract userIds from approved applications
     const userIds = approvedApplications.map((app) => app.userId);
 
-    //   Fetch user details using the userIds
-    const users = await User.find({ _id: { $in: userIds } })
+    // Fetch user details using the userIds, ensuring the status is "active"
+    const users = await User.find({
+      _id: { $in: userIds },
+      status: "active",
+    })
       .sort({ createdAt: order_by === "asc" ? 1 : -1 })
       .skip(skip)
       .limit(size);
 
-    // Get the total number of users (for pagination metadata)
-    const totalUsers = await User.countDocuments({ _id: { $in: userIds } });
+    // Get the total number of active users (for pagination metadata)
+    const totalUsers = await User.countDocuments({
+      _id: { $in: userIds },
+      status: "active",
+    });
 
     // Calculate total pages
     const totalPages = Math.ceil(totalUsers / size);
 
-    //   Return the users and their corresponding applications
+    // Return the users and their corresponding applications
     const response = users.map((user) => ({
       provider: user,
       applications: approvedApplications.filter(
