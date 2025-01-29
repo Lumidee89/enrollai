@@ -66,10 +66,10 @@ const registerOrganization = async (req, res) => {
 };
 
 const verifyOrganizationOtp = async (req, res) => {
-  const { workEmail, otp } = req.body;
+  const { email, otp } = req.body;
 
   try {
-    const organization = await Organization.findOne({ workEmail });
+    const organization = await Organization.findOne({ workEmail: email });
 
     if (!organization) {
       return res.status(400).json({ msg: "Organization not found" });
@@ -151,7 +151,7 @@ const forgotOrganizationPassword = async (req, res) => {
   const { email } = req.body;
 
   try {
-    const organization = await Organization.findOne({ email });
+    const organization = await Organization.findOne({ workEmail: email });
     if (!organization)
       return res.status(400).json({ msg: "Organization not found" });
 
@@ -174,7 +174,7 @@ const resetOrganizationPassword = async (req, res) => {
   const { email, otp, newPassword } = req.body;
 
   try {
-    const organization = await Organization.findOne({ email });
+    const organization = await Organization.findOne({ workEmail: email });
 
     organization.password = newPassword;
     organization.otp = undefined;
@@ -187,10 +187,10 @@ const resetOrganizationPassword = async (req, res) => {
 };
 
 const resendOrganizationOtp = async (req, res) => {
-  const { workEmail } = req.params;
+  const { email } = req.params;
 
   try {
-    const organization = await Organization.findOne({ workEmail });
+    const organization = await Organization.findOne({ workEmail: email });
     if (!organization)
       return res.status(400).json({ msg: "Organization not found" });
 
