@@ -135,7 +135,7 @@ router.get(
 );
 
 router.delete(
-  "/delete/all",
+  "/delete/all-org",
   // protect,
   // authorize("organization"),
   clearAllOrganizations

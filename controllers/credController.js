@@ -153,6 +153,8 @@ async function updateProviderApplication(req, res) {
       application,
     });
   } catch (error) {
+    console.log(error);
+
     return { success: false, message: error.message };
   }
 }

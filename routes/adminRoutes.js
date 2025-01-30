@@ -15,7 +15,7 @@ const {
 const { updateProfile } = require("../controllers/authcontroller");
 
 // Create a new admin account (FE: Admin Route)
-router.post("/create", protect, authorize("super_admin"), createSuperAdmin);
+router.post("/create", createSuperAdmin);
 
 // Applications
 

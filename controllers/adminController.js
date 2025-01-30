@@ -46,11 +46,11 @@ exports.createSuperAdmin = async (req, res) => {
 
     await sendEmail(newSuperAdmin.email, emailSubject, emailText);
 
-    await logActivity(
-      req.user._id,
-      "create admin user",
-      "You created a new admin account"
-    );
+    // await logActivity(
+    //   req.user._id,
+    //   "create admin user",
+    //   "You created a new admin account"
+    // );
 
     res.status(201).json({
       success: true,

@@ -20,7 +20,7 @@ const registerOrganization = async (req, res) => {
       password,
     } = req.body;
 
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ email: workEmail });
     if (user) return res.status(400).json({ msg: "User already exists" });
 
     const existingOrganization = await Organization.findOne({ workEmail });
