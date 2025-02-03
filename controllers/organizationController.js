@@ -122,16 +122,30 @@ const loginOrganization = async (req, res) => {
         msg: "Your account have been suspended. Please Contact Support.",
       });
 
-    const token = jwt.sign(
+    const accessToken = jwt.sign(
       { userId: organization._id, accountType: "organization" },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
     );
+
+    // Generate Refresh Token (expires in 6 hours)
+    const refreshToken = jwt.sign(
+      { userId: organization._id },
+      process.env.REFRESH_SECRET,
+      { expiresIn: "4h" }
+    );
+
+    organization.refreshToken = refreshToken;
+    await organization.save();
 
     await logActivity(organization._id, "login", "User logged in successfully");
 
     res.status(200).json({
       message: "Login successful",
-      token,
+      accessToken,
+      refreshToken,
       organization: {
         id: organization._id,
         organizationName: organization.organizationName,

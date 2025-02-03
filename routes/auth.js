@@ -12,6 +12,8 @@ router.post("/login", authController.login);
 router.post("/forgot-password", authController.forgotPassword);
 router.post("/reset-password", authController.resetPassword);
 router.get("/resend-otp/:email", authController.resendOtp);
+router.post("/refresh-token", authController.refreshToken);
+router.post("/logout", authController.logout);
 
 // Get User (Provider) Information
 router.get("/users", authController.getUserDetails);

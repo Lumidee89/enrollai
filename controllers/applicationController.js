@@ -323,11 +323,11 @@ const getApplicationStatsByUserId = async (req, res) => {
 
     const applications = await Application.find({ userId });
 
-    if (!applications || applications.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No applications found for this user" });
-    }
+    // if (!applications || applications.length === 0) {
+    //   return res
+    //     .status(404)
+    //     .json({ message: "No applications found for this user" });
+    // }
 
     const totalApplications = applications.length;
     const approvedApplications = applications.filter(

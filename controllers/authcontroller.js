@@ -43,6 +43,7 @@ exports.register = async (req, res) => {
       email,
       password,
       createdAt: new Date(),
+      profileStatus: 33,
     });
 
     user.otp = generateOtp();
@@ -115,27 +116,102 @@ exports.login = async (req, res) => {
 
     if (user.status === "suspended")
       return res.status(403).json({
-        msg: "Your account have been suspended. Please Contact Support.",
+        msg: "Your account has been suspended. Please Contact Support.",
       });
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
+    // Generate Access Token (expires in 1 hour)
+    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
-    await logActivity(user._id, "login", "User logged in successfully");
+    // Generate Refresh Token (expires in 6 hours)
+    const refreshToken = jwt.sign(
+      { userId: user._id },
+      process.env.REFRESH_SECRET,
+      { expiresIn: "4h" }
+    );
+
+    // Save refresh token in the database (optional)
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    // Send refresh token as HTTP-Only Cookie (More Secure)
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 6 * 60 * 60 * 1000,
+    });
 
     res.status(200).json({
       userId: user._id,
-      token,
+      accessToken,
+      refreshToken,
       fullName: user.fullName,
       email: user.email,
       isVerified: user.isVerified,
       accountType: user.accountType,
-      professionalTitle: user.professionalTitle,
-      createdAt: user.createdAt,
-      profileStatus: user.profileStatus,
-      profilePicture: user.profilePicture || null,
+      ...user,
     });
   } catch (error) {
     console.error("Login error:", error);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+exports.refreshToken = async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res
+      .status(401)
+      .json({ success: false, msg: "No refresh token found" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.REFRESH_SECRET);
+
+    if (!decoded)
+      return res.status(401).json({
+        success: false,
+        msg: "Session expired, please log in again",
+      });
+
+    const user = await User.findById(decoded.userId);
+
+    if (!user || user.refreshToken !== token) {
+      return res
+        .status(403)
+        .json({ success: false, msg: "Invalid refresh token" });
+    }
+
+    // Issue a new access token
+    const newAccessToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "4h" }
+    );
+
+    res.json({ success: true, accessToken: newAccessToken });
+  } catch (error) {
+    console.error("Refresh token error:", error.message);
+
+    if (error.message === "jwt expired") {
+      return res.status(401).json({
+        success: false,
+        msg: "Your session has expired. Please log in again.",
+      });
+    }
+
+    res.status(403).json({ success: false, msg: "Invalid refresh token" });
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    res.clearCookie("refreshToken");
+    res.status(200).json({ msg: "Logged out successfully" });
+  } catch (error) {
     res.status(500).json({ msg: "Server error" });
   }
 };

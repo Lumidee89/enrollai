@@ -8,8 +8,11 @@ const applicationRoutes = require("./routes/applicationRoutes.js");
 const organizationRoutes = require("./routes/organizationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const activityRoute = require("./routes/activityRoute");
+const cookieParser = require("cookie-parser");
 
 const app = express();
+
+app.use(cookieParser());
 
 connectDB();
 

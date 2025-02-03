@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Organization = require("../models/Organization");
+require("dotenv").config();
 
 const protect = async (req, res, next) => {
   let token;
@@ -10,10 +11,13 @@ const protect = async (req, res, next) => {
     req.headers.authorization.startsWith("Bearer")
   ) {
     try {
-      token = req.headers.authorization.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      token = req.header("Authorization")?.replace("Bearer ", "");
 
-      // console.log("Decoded Token:", decoded);
+      if (!token) {
+        return res.status(401).json({ msg: "No token, authorization denied" });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       switch (decoded.accountType) {
         case "organization":

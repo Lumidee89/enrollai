@@ -17,6 +17,7 @@ const OrganizationSchema = new mongoose.Schema({
   workEmail: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   profilePicture: { type: String },
+  refreshToken: { type: String },
   otp: { type: String },
   otpCreatedAt: { type: Date },
   profileStatus: { type: Number, default: 50 },
