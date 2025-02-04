@@ -175,36 +175,36 @@ const applicationSchema = new mongoose.Schema(
       medicalLicenses: {
         deaRegistrationNumber: { type: String },
         deaExpirationDate: { type: Date },
-        deaExpirationFile: { type: String },
+        deaExpirationFile: { type: String, default: null },
 
         controlledSubstanceCertificate: { type: String },
         controlledSubstanceExpirationDate: { type: Date },
-        controlledSubstanceExpirationFile: { type: String },
+        controlledSubstanceExpirationFile: { type: String, default: null },
 
         ECFMGNumber: { type: String },
         ecfmIssueDate: { type: Date },
         ecfmValidThrough: { type: Date },
-        ECFMGFile: { type: String },
+        ECFMGFile: { type: String, default: null },
 
         medicaidIDNumber: { type: String },
-        medicaidCertificate: { type: String },
+        medicaidCertificate: { type: String, default: null },
       },
 
       otherMedLicenses: {
         stateMedicalLicense1: { type: String },
         stateMedicalLicenseNumber1: { type: String },
         stateMedicalLicenseExpirationDate1: { type: Date },
-        stateMedicalLicensefile1: { type: String },
+        stateMedicalLicensefile1: { type: String, default: null },
 
         stateMedicalLicense2: { type: String },
         stateMedicalLicenseNumber2: { type: String },
         stateMedicalLicenseExpirationDate2: { type: Date },
-        stateMedicalLicensefile2: { type: String },
+        stateMedicalLicensefile2: { type: String, default: null },
 
         stateMedicalLicense3: { type: String },
         stateMedicalLicenseNumber3: { type: String },
         stateMedicalLicenseExpirationDate3: { type: Date },
-        stateMedicalLicensefile3: { type: String },
+        stateMedicalLicensefile3: { type: String, default: null },
       },
     },
     step3: {
@@ -248,19 +248,19 @@ const applicationSchema = new mongoose.Schema(
         boardCertification1Specialty: { type: String },
         boardCertification1CertifiedDate: { type: Date },
         boardCertification1ExpirationDate: { type: Date },
-        certificationfile1: { type: String },
+        certificationfile1: { type: String, default: null },
 
         boardCertification2Board: { type: String },
         boardCertification2Specialty: { type: String },
         boardCertification2CertifiedDate: { type: Date },
         boardCertification2ExpirationDate: { type: Date },
-        certificationfile2: { type: String },
+        certificationfile2: { type: String, default: null },
 
         boardCertification3Board: { type: String },
         boardCertification3Specialty: { type: String },
         boardCertification3CertifiedDate: { type: Date },
         boardCertification3ExpirationDate: { type: Date },
-        certificationfile3: { type: String },
+        certificationfile3: { type: String, default: null },
 
         appliedForOtherBoardCertification: { type: Boolean, default: false },
 
