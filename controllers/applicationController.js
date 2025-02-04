@@ -23,8 +23,6 @@ const createApplication = async (req, res) => {
       applicationTitle,
       organizationName,
       organizationId,
-
-      // If Files are already in String format (URL)
       medicaidCertificate: medicaidCertificateURLString,
       ECFMGFile: ECFMGFileURLString,
       controlledSubstanceExpirationFile:
@@ -38,6 +36,8 @@ const createApplication = async (req, res) => {
       certificationfile3: certificationfile3URLString,
     } = req.body;
 
+    const files = req.files || {};
+
     const {
       medicaidCertificate,
       ECFMGFile,
@@ -49,7 +49,7 @@ const createApplication = async (req, res) => {
       certificationfile1,
       certificationfile2,
       certificationfile3,
-    } = req.files;
+    } = files;
 
     console.log(req.files, "Files received by multer");
     console.log(req.body, "Parsed body from multer");
@@ -86,7 +86,6 @@ const createApplication = async (req, res) => {
     const uploadToCloudinary = async (file) => {
       try {
         if (file && file.buffer) {
-          // If the file is a buffer, upload it directly as a buffer
           const result = await new Promise((resolve, reject) => {
             cloudinary.uploader
               .upload_stream(
@@ -121,68 +120,68 @@ const createApplication = async (req, res) => {
       }
     };
 
-    // Handle files and URL strings for step2.medicalLicenses
+    // Handle files and URL strings
     parsedStep2.medicalLicenses.medicaidCertificate =
       medicaidCertificateURLString ||
-      (medicaidCertificate
+      (medicaidCertificate && medicaidCertificate[0]
         ? await uploadToCloudinary(medicaidCertificate[0])
         : null);
 
     parsedStep2.medicalLicenses.ECFMGFile =
       ECFMGFileURLString ||
-      (ECFMGFile ? await uploadToCloudinary(ECFMGFile[0]) : null);
+      (ECFMGFile && ECFMGFile[0]
+        ? await uploadToCloudinary(ECFMGFile[0])
+        : null);
 
     parsedStep2.medicalLicenses.controlledSubstanceExpirationFile =
       controlledSubstanceExpirationFileURLString ||
-      (controlledSubstanceExpirationFile
+      (controlledSubstanceExpirationFile && controlledSubstanceExpirationFile[0]
         ? await uploadToCloudinary(controlledSubstanceExpirationFile[0])
         : null);
 
     parsedStep2.medicalLicenses.deaExpirationFile =
       deaExpirationFileURLString ||
-      (deaExpirationFile
+      (deaExpirationFile && deaExpirationFile[0]
         ? await uploadToCloudinary(deaExpirationFile[0])
         : null);
 
-    // Handle files and URL strings for step2.otherMedLicenses
     parsedStep2.otherMedLicenses.stateMedicalLicensefile1 =
       stateMedicalLicensefile1URLString ||
-      (stateMedicalLicensefile1
+      (stateMedicalLicensefile1 && stateMedicalLicensefile1[0]
         ? await uploadToCloudinary(stateMedicalLicensefile1[0])
         : null);
 
     parsedStep2.otherMedLicenses.stateMedicalLicensefile2 =
       stateMedicalLicensefile2URLString ||
-      (stateMedicalLicensefile2
+      (stateMedicalLicensefile2 && stateMedicalLicensefile2[0]
         ? await uploadToCloudinary(stateMedicalLicensefile2[0])
         : null);
 
     parsedStep2.otherMedLicenses.stateMedicalLicensefile3 =
       stateMedicalLicensefile3URLString ||
-      (stateMedicalLicensefile3
+      (stateMedicalLicensefile3 && stateMedicalLicensefile3[0]
         ? await uploadToCloudinary(stateMedicalLicensefile3[0])
         : null);
 
-    // Handle files and URL strings for step3.boards
     parsedStep3.boards.certificationfile1 =
       certificationfile1URLString ||
-      (certificationfile1
+      (certificationfile1 && certificationfile1[0]
         ? await uploadToCloudinary(certificationfile1[0])
         : null);
 
     parsedStep3.boards.certificationfile2 =
       certificationfile2URLString ||
-      (certificationfile2
+      (certificationfile2 && certificationfile2[0]
         ? await uploadToCloudinary(certificationfile2[0])
         : null);
 
     parsedStep3.boards.certificationfile3 =
       certificationfile3URLString ||
-      (certificationfile3
+      (certificationfile3 && certificationfile3[0]
         ? await uploadToCloudinary(certificationfile3[0])
         : null);
 
-    // Create the application with updated file URLs
+    // Create the application
     const newApplication = new Application({
       userId,
       applicationType,

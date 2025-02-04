@@ -17,6 +17,8 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ msg: "No token, authorization denied" });
       }
 
+      console.log(jwt.decode(token));
+
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       switch (decoded.accountType) {
